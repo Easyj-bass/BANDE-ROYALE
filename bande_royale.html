@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BAND ROYAL — Journal Financier</title>
+<link rel="icon" type="image/jpeg" href="logobr.jpeg">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+/* ══════════════════════════════════════════════════
+   VARIABLES
+══════════════════════════════════════════════════ */
+:root {
+  /* Nuit */
+  --bg:          #07080f;
+  --bg2:         #0b0d18;
+  --card:        #111521;
+  --card2:       #181d2e;
+  --card3:       #1e2438;
+  --border:      #252d45;
+  --border2:     #1a2035;
+  --gold:        #d4a843;
+  --gold2:       #f0cc6e;
+  --gold-dim:    #7a5e1e;
+  --gold-glow:   rgba(212,168,67,.18);
+  --green:       #10d98a;
+  --green-dim:   rgba(16,217,138,.12);
+  --red:         #f43f5e;
+  --red-dim:     rgba(244,63,94,.12);
+  --text:        #dde4f5;
+  --text2:       #a8b4cc;
+  --muted:       #566077;
+  --font-royal:  'Cinzel', serif;
+  --font-body:   'Inter', sans-serif;
+  --font-mono:   'DM Mono', monospace;
+  --r-sm:  8px;
+  --r-md:  13px;
+  --r-lg:  18px;
+  --r-xl:  24px;
+  --shadow-card: 0 2px 20px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.04);
+  --shadow-deep: 0 20px 60px rgba(0,0,0,.7);
+  --t: all .22s ease;
+  --header-bg:  rgba(7,8,15,.9);
+  --form-bg:    rgba(11,13,24,.7);
+  --input-bg:   #0b0d18;
+  --overlay-lock: rgba(7,8,15,.8);
+  --np-hover:   #1e2438;
+  --sub-row-bg: rgba(212,168,67,.03);
+  --total-bg:   #181d2e;
+}
+[data-theme="light"] {
+  --bg:          #f1f5ff;
+  --bg2:         #e8eeff;
+  --card:        #ffffff;
+  --card2:       #f5f8ff;
+  --card3:       #edf1fc;
+  --border:      #d4daf0;
+  --border2:     #e4e9f8;
+  --gold:        #9a6e00;
+  --gold2:       #b8860b;
+  --gold-dim:    #c09a30;
+  --gold-glow:   rgba(154,110,0,.1);
+  --green:       #00875a;
+  --green-dim:   rgba(0,135,90,.1);
+  --red:         #cc1f3a;
+  --red-dim:     rgba(204,31,58,.1);
+  --text:        #111827;
+  --text2:       #374151;
+  --muted:       #6b7280;
+  --shadow-card: 0 2px 16px rgba(0,20,80,.08), 0 0 0 1px rgba(0,20,80,.06);
+  --shadow-deep: 0 20px 60px rgba(0,0,0,.25);
+  --header-bg:  rgba(241,245,255,.92);
+  --form-bg:    rgba(232,238,255,.8);
+  --input-bg:   #ffffff;
+  --overlay-lock: rgba(241,245,255,.82);
+  --np-hover:   #edf1fc;
+  --sub-row-bg: rgba(154,110,0,.04);
+  --total-bg:   #f0f4ff;
+}
+
+/* ══ RESET ══ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; scroll-behavior: smooth; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--font-body); min-height: 100vh;
+  overflow-x: hidden; transition: background .3s, color .3s;
+}
+
+/* ══════════════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════════════ */
+header {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--header-bg); backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border2);
+  padding: 0 40px; height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+  transition: background .3s;
+}
+.logo-wrap { display: flex; align-items: center; gap: 13px; }
+.logo-img {
+  width: 40px; height: 40px; border-radius: 10px; object-fit: cover;
+  border: 1.5px solid rgba(212,168,67,.4);
+  box-shadow: 0 0 16px rgba(212,168,67,.2);
+}
+.logo-text {
+  font-family: var(--font-royal); font-size: 1.22rem; font-weight: 900;
+  letter-spacing: .1em; line-height: 1;
+  background: linear-gradient(100deg, #c9a84c 0%, #f0cc6e 50%, #c9a84c 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.logo-sub {
+  font-family: var(--font-mono); font-size: .55rem; color: var(--muted);
+  letter-spacing: .2em; text-transform: uppercase; margin-top: 3px;
+}
+.header-right { display: flex; align-items: center; gap: 10px; }
+.header-date {
+  font-family: var(--font-mono); font-size: .68rem; color: var(--muted);
+  padding: 0 14px; border-right: 1px solid var(--border);
+}
+/* Bouton thème */
+.btn-theme {
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 1px solid var(--border); background: none;
+  cursor: pointer; font-size: .95rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--t); color: var(--muted);
+}
+.btn-theme:hover { background: var(--gold-glow); border-color: var(--gold-dim); }
+/* Badge mode */
+.mode-badge {
+  font-family: var(--font-mono); font-size: .62rem; padding: 5px 14px;
+  border-radius: 20px; border: 1px solid; letter-spacing: .08em; text-transform: uppercase;
+  transition: var(--t);
+}
+.mode-badge.view { border-color: var(--border); color: var(--muted); }
+.mode-badge.edit {
+  border-color: var(--gold-dim); color: var(--gold);
+  background: var(--gold-glow);
+}
+
+/* ══════════════════════════════════════════════════
+   BARRES INFO (session / lock)
+══════════════════════════════════════════════════ */
+.info-bar {
+  margin: 14px 40px 0; border-radius: var(--r-md);
+  padding: 11px 20px; display: none;
+  align-items: center; justify-content: space-between; gap: 14px;
+}
+.info-bar.visible { display: flex; }
+.info-bar.session { background: var(--green-dim); border: 1px solid rgba(16,217,138,.2); }
+.info-bar.lock    { background: var(--gold-glow);  border: 1px dashed rgba(212,168,67,.3); }
+.info-bar-text { font-family: var(--font-mono); font-size: .7rem; }
+.info-bar.session .info-bar-text { color: var(--green); }
+.info-bar.lock    .info-bar-text { color: var(--text2); }
+.info-bar.lock    .info-bar-text strong { color: var(--gold); }
+.btn-session-end {
+  background: none; border: 1px solid rgba(16,217,138,.25); border-radius: var(--r-sm);
+  color: var(--green); font-family: var(--font-mono); font-size: .64rem;
+  padding: 5px 14px; cursor: pointer; transition: var(--t); white-space: nowrap;
+}
+.btn-session-end:hover { background: rgba(16,217,138,.1); }
+.btn-unlock {
+  background: var(--gold); color: #000; border: none; border-radius: var(--r-sm);
+  font-family: var(--font-royal); font-weight: 700; font-size: .72rem;
+  padding: 8px 18px; cursor: pointer; white-space: nowrap; letter-spacing: .05em;
+  transition: opacity .2s;
+}
+.btn-unlock:hover { opacity: .85; }
+
+/* ══════════════════════════════════════════════════
+   STATS BANNER
+══════════════════════════════════════════════════ */
+.stats-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px; margin: 20px 40px 0;
+}
+.stat-card {
+  border-radius: var(--r-lg); padding: 22px 26px;
+  position: relative; overflow: hidden;
+  background: var(--card); border: 1px solid var(--border);
+  box-shadow: var(--shadow-card); transition: var(--t);
+}
+.stat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.stat-card.cred::before { background: linear-gradient(90deg, var(--green), transparent); }
+.stat-card.deb::before  { background: linear-gradient(90deg, var(--red),   transparent); }
+.stat-card.bal::before  { background: linear-gradient(90deg, var(--gold),  transparent); }
+.stat-card::after {
+  content: ''; position: absolute; top: -40px; right: -40px;
+  width: 120px; height: 120px; border-radius: 50%; pointer-events: none;
+}
+.stat-card.cred::after { background: radial-gradient(circle, rgba(16,217,138,.06) 0%, transparent 70%); }
+.stat-card.deb::after  { background: radial-gradient(circle, rgba(244,63,94,.06)  0%, transparent 70%); }
+.stat-card.bal::after  { background: radial-gradient(circle, rgba(212,168,67,.07) 0%, transparent 70%); }
+.stat-icon {
+  font-size: 1.4rem; margin-bottom: 12px;
+  width: 40px; height: 40px; border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+}
+.stat-card.cred .stat-icon { background: var(--green-dim); }
+.stat-card.deb  .stat-icon { background: var(--red-dim); }
+.stat-card.bal  .stat-icon { background: var(--gold-glow); }
+.stat-label {
+  font-family: var(--font-mono); font-size: .6rem; text-transform: uppercase;
+  letter-spacing: .14em; color: var(--muted); margin-bottom: 6px;
+}
+.stat-value {
+  font-family: var(--font-royal); font-size: 1.75rem; font-weight: 700;
+  line-height: 1.1; margin-bottom: 5px;
+}
+.stat-card.cred .stat-value { color: var(--green); }
+.stat-card.deb  .stat-value { color: var(--red); }
+.stat-card.bal  .stat-value { color: var(--gold2); }
+.stat-sub { font-size: .67rem; color: var(--muted); font-family: var(--font-mono); }
+
+/* ══════════════════════════════════════════════════
+   PANELS
+══════════════════════════════════════════════════ */
+.panels-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 16px; margin: 20px 40px 0;
+}
+.panel {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r-lg); overflow: hidden;
+  box-shadow: var(--shadow-card); display: flex; flex-direction: column;
+  transition: background .3s, border-color .3s;
+}
+
+/* ── En-tête panel ── */
+.panel-head {
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-title-wrap { display: flex; align-items: center; gap: 10px; }
+.panel-icon {
+  width: 32px; height: 32px; border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center; font-size: .9rem;
+}
+.panel-cred .panel-icon { background: var(--green-dim); }
+.panel-deb  .panel-icon { background: var(--red-dim); }
+.panel-title {
+  font-family: var(--font-royal); font-size: .9rem; font-weight: 700;
+  letter-spacing: .05em; color: var(--text);
+}
+.panel-badge {
+  font-family: var(--font-mono); font-size: .64rem;
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 3px 11px; color: var(--muted);
+}
+
+/* ── Barre de couleur en haut du panel ── */
+.panel::before {
+  content: ''; display: block; height: 3px; flex-shrink: 0;
+}
+.panel-cred::before { background: linear-gradient(90deg, var(--green) 0%, transparent 100%); }
+.panel-deb::before  { background: linear-gradient(90deg, var(--red)   0%, transparent 100%); }
+
+/* ── Zone formulaire ── */
+.form-area {
+  padding: 14px 18px; border-bottom: 1px solid var(--border);
+  background: var(--form-bg); position: relative;
+  transition: background .3s;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 148px 1fr 92px 84px;
+  gap: 9px;
+}
+/* Description = pleine largeur */
+.form-grid > :first-child { grid-column: 1 / -1; }
+
+input[type=text], input[type=date], input[type=number], input[type=password] {
+  background: var(--input-bg); border: 1.5px solid var(--border);
+  border-radius: var(--r-sm); color: var(--text);
+  font-family: var(--font-mono); font-size: .8rem;
+  padding: 9px 12px; outline: none; width: 100%;
+  transition: border-color .2s, box-shadow .2s, background .3s, color .3s;
+}
+input::placeholder { color: var(--muted); }
+input:focus {
+  border-color: var(--gold-dim);
+  box-shadow: 0 0 0 3px rgba(212,168,67,.12);
+}
+.btn-add {
+  border: none; border-radius: var(--r-sm);
+  font-family: var(--font-royal); font-weight: 700; font-size: .74rem;
+  padding: 9px 0; cursor: pointer; letter-spacing: .04em;
+  transition: opacity .2s, transform .1s; width: 100%;
+}
+.btn-add:hover  { opacity: .87; }
+.btn-add:active { transform: scale(.96); }
+.btn-add-c { background: var(--green); color: #000; }
+.btn-add-d { background: var(--red);   color: #fff; }
+.btn-details-open {
+  border: 1.5px solid var(--gold-dim); background: var(--gold-glow);
+  border-radius: var(--r-sm); color: var(--gold);
+  font-family: var(--font-mono); font-size: .66rem;
+  padding: 9px 4px; cursor: pointer; transition: var(--t); width: 100%;
+  white-space: nowrap; font-weight: 500;
+}
+.btn-details-open:hover { background: rgba(212,168,67,.2); border-color: var(--gold); }
+.btn-details-open:active { transform: scale(.96); }
+
+/* Overlay verrouillé */
+.form-area.locked::after {
+  content: '🔒  Cliquez pour déverrouiller';
+  position: absolute; inset: 0; z-index: 5;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--overlay-lock); backdrop-filter: blur(3px);
+  color: var(--gold); font-family: var(--font-mono); font-size: .73rem;
+  letter-spacing: .1em; cursor: pointer; border-radius: 0;
+}
+
+/* ── Tableau ── */
+.table-wrap { flex: 1; overflow-y: auto; max-height: 340px; }
+.table-wrap::-webkit-scrollbar { width: 4px; }
+.table-wrap::-webkit-scrollbar-track { background: transparent; }
+.table-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+thead th {
+  position: sticky; top: 0; z-index: 1;
+  background: var(--card2); color: var(--muted);
+  font-family: var(--font-mono); font-weight: 400;
+  text-transform: uppercase; letter-spacing: .1em;
+  padding: 9px 16px; text-align: left;
+  border-bottom: 1px solid var(--border); font-size: .61rem;
+  transition: background .3s;
+}
+tbody tr {
+  border-bottom: 1px solid var(--border2);
+  transition: background .12s;
+}
+tbody tr:hover { background: rgba(212,168,67,.03); }
+tbody td { padding: 11px 16px; }
+td.num-c  { color: var(--muted); font-family: var(--font-mono); font-size: .65rem; width: 32px; text-align: center; }
+td.desc-c { max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+td.date-c { color: var(--muted); font-family: var(--font-mono); font-size: .71rem; white-space: nowrap; }
+td.amt-c  { color: var(--green); font-weight: 600; text-align: right; font-family: var(--font-mono); }
+td.amt-d  { color: var(--red);   font-weight: 600; text-align: right; font-family: var(--font-mono); }
+
+/* Badges & boutons inline */
+.has-details-badge {
+  display: inline-flex; align-items: center;
+  font-size: .57rem; font-family: var(--font-mono);
+  background: var(--gold-glow); color: var(--gold);
+  border: 1px solid rgba(212,168,67,.2);
+  border-radius: 20px; padding: 1px 7px;
+  margin-left: 6px; vertical-align: middle;
+}
+.btn-expand, .btn-edit-ev {
+  background: none; border: none; cursor: pointer;
+  font-size: .72rem; padding: 2px 5px; border-radius: 5px;
+  transition: all .15s; vertical-align: middle; margin-left: 2px;
+}
+.btn-expand   { color: var(--muted); }
+.btn-expand:hover, .btn-expand.expanded { color: var(--gold); }
+.btn-edit-ev  { color: var(--muted); }
+.btn-edit-ev:hover { color: var(--gold2); background: var(--gold-glow); }
+
+/* Bouton supprimer */
+.btn-del {
+  background: none; border: none; cursor: pointer;
+  font-size: .78rem; padding: 4px 7px; border-radius: 5px; transition: all .15s;
+}
+.btn-del.unlocked     { color: var(--border); }
+.btn-del.unlocked:hover { color: var(--red); background: var(--red-dim); }
+.btn-del.locked-del   { color: var(--border); opacity: .5; font-size: .68rem; }
+.btn-del.locked-del:hover { color: var(--gold); opacity: 1; }
+
+/* Lignes détail (sous-lignes) */
+tr.detail-sub-row { background: var(--sub-row-bg) !important; }
+tr.detail-sub-row td { padding: 6px 16px 6px 28px; border-bottom: 1px solid var(--border2); }
+.dsub-nom   { font-size: .74rem; color: var(--text2); }
+.dsub-motif { font-size: .7rem;  color: var(--muted); font-style: italic; }
+.dsub-amt   { font-family: var(--font-mono); font-size: .74rem; font-weight: 500; text-align: right; }
+.dsub-amt.c { color: rgba(16,217,138,.75); }
+.dsub-amt.d { color: rgba(244,63,94,.75); }
+.btn-del-sub {
+  background: none; border: none; cursor: pointer;
+  color: var(--border); font-size: .7rem; padding: 2px 5px;
+  border-radius: 4px; transition: all .15s;
+}
+.btn-del-sub:hover { color: var(--red); background: var(--red-dim); }
+
+/* Ligne total */
+tr.total-row { background: var(--total-bg) !important; }
+tr.total-row td {
+  font-family: var(--font-mono); font-weight: 600;
+  padding: 11px 16px; transition: background .3s;
+}
+tr.total-row .lbl {
+  color: var(--muted); font-size: .62rem;
+  text-transform: uppercase; letter-spacing: .1em;
+}
+/* Ligne vide */
+.empty-row td {
+  text-align: center; color: var(--muted);
+  padding: 40px 16px; font-size: .74rem;
+  font-family: var(--font-mono); font-style: italic;
+}
+
+/* ══════════════════════════════════════════════════
+   BARRE EXPORT
+══════════════════════════════════════════════════ */
+.bottom-bar {
+  margin: 20px 40px 60px;
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+}
+.btn-export {
+  background: linear-gradient(135deg, #9a6e00, var(--gold));
+  color: #000; border: none; border-radius: var(--r-md);
+  font-family: var(--font-royal); font-weight: 700; font-size: .84rem;
+  padding: 13px 30px; cursor: pointer; letter-spacing: .06em;
+  display: flex; align-items: center; gap: 9px;
+  box-shadow: 0 4px 24px rgba(212,168,67,.25);
+  transition: box-shadow .2s, transform .12s, opacity .2s;
+}
+.btn-export:hover  { box-shadow: 0 6px 32px rgba(212,168,67,.4); opacity: .93; }
+.btn-export:active { transform: scale(.97); }
+.export-hint { font-size: .7rem; color: var(--muted); font-family: var(--font-mono); line-height: 1.8; }
+
+/* ══════════════════════════════════════════════════
+   MODALS — BASE
+══════════════════════════════════════════════════ */
+.modal-overlay, .details-overlay {
+  position: fixed; inset: 0; display: none;
+  align-items: center; justify-content: center; padding: 20px;
+  background: rgba(0,0,0,.7); backdrop-filter: blur(12px);
+}
+.modal-overlay { z-index: 9000; }
+.details-overlay { z-index: 8500; }
+.modal-overlay.open, .details-overlay.open { display: flex; }
+@keyframes popIn {
+  from { transform: scale(.88) translateY(8px); opacity: 0; }
+  to   { transform: scale(1)   translateY(0);   opacity: 1; }
+}
+
+/* ══════════════════════════════════════════════════
+   MODAL PIN
+══════════════════════════════════════════════════ */
+.modal {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r-xl); padding: 36px 34px; width: 340px; max-width: 100%;
+  box-shadow: var(--shadow-deep), 0 0 0 1px rgba(255,255,255,.04);
+  animation: popIn .28s cubic-bezier(.34,1.56,.64,1);
+  transition: background .3s;
+}
+.modal-logo {
+  display: block; width: 54px; height: 54px;
+  border-radius: 14px; object-fit: cover;
+  margin: 0 auto 16px;
+  border: 2px solid rgba(212,168,67,.35);
+  box-shadow: 0 0 20px rgba(212,168,67,.2);
+}
+.modal-title {
+  font-family: var(--font-royal); text-align: center; font-size: 1.05rem;
+  letter-spacing: .1em;
+  background: linear-gradient(90deg, #c9a84c, #f0cc6e, #c9a84c);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 5px;
+}
+.modal-sub {
+  font-family: var(--font-mono); font-size: .63rem; color: var(--muted);
+  text-align: center; letter-spacing: .1em; text-transform: uppercase;
+  margin-bottom: 24px;
+}
+.pin-field-wrap { margin-bottom: 16px; }
+.pin-field-wrap input {
+  text-align: center; font-size: 1.5rem; letter-spacing: .3em;
+  padding: 13px 16px; border-radius: var(--r-md);
+}
+.pin-field-wrap input::placeholder { font-size: .85rem; letter-spacing: .05em; }
+.numpad { display: grid; grid-template-columns: repeat(3,1fr); gap: 9px; }
+.np-btn {
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: var(--r-md); color: var(--text);
+  font-family: var(--font-mono); font-size: 1.15rem; font-weight: 500;
+  padding: 16px 0; cursor: pointer; text-align: center;
+  transition: background .12s, transform .1s, border-color .15s; user-select: none;
+}
+.np-btn:hover  { background: var(--np-hover); border-color: var(--gold-dim); }
+.np-btn:active { transform: scale(.92); }
+.np-btn.del    { color: var(--muted); font-size: .9rem; }
+.np-btn.enter  {
+  background: var(--gold); color: #000; font-weight: 700;
+  border-color: var(--gold); font-size: 1rem;
+}
+.np-btn.enter:hover { background: var(--gold2); }
+.np-btn.cancel { color: var(--muted); font-size: .7rem; letter-spacing: .04em; }
+.pin-error    { margin-top: 13px; text-align: center; font-size: .72rem; color: var(--red); min-height: 16px; font-family: var(--font-mono); }
+.pin-attempts { margin-top: 4px; text-align: center; font-size: .66rem; color: var(--muted); font-family: var(--font-mono); }
+
+/* ══════════════════════════════════════════════════
+   MODAL DÉTAILS
+══════════════════════════════════════════════════ */
+.modal-details {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r-xl); padding: 28px 30px; width: 570px; max-width: 100%;
+  max-height: calc(100vh - 40px); overflow-y: auto;
+  box-shadow: var(--shadow-deep);
+  animation: popIn .28s cubic-bezier(.34,1.56,.64,1);
+  display: flex; flex-direction: column; gap: 18px;
+  transition: background .3s;
+}
+.modal-details::-webkit-scrollbar { width: 4px; }
+.modal-details::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.details-header { padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.details-event-name {
+  font-family: var(--font-royal); font-size: 1.15rem; letter-spacing: .07em;
+  background: linear-gradient(90deg, #c9a84c, #f0cc6e);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 5px;
+}
+.details-event-date { font-family: var(--font-mono); font-size: .66rem; color: var(--muted); }
+.details-ref-amt {
+  display: none; margin-top: 10px;
+  font-family: var(--font-mono); font-size: .68rem; color: var(--gold);
+  background: var(--gold-glow); border: 1px solid rgba(212,168,67,.2);
+  border-radius: var(--r-sm); padding: 7px 12px; line-height: 1.5;
+}
+
+.details-subform {
+  background: var(--form-bg); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 14px; transition: background .3s;
+}
+.details-subform-lbl {
+  font-family: var(--font-mono); font-size: .6rem; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .13em; margin-bottom: 10px;
+}
+.details-subform-grid { display: grid; grid-template-columns: 1fr 110px 1fr 42px; gap: 8px; }
+.btn-dl-add {
+  background: var(--gold); color: #000; border: none; border-radius: var(--r-sm);
+  font-weight: 700; font-size: 1.2rem; cursor: pointer; transition: opacity .2s;
+}
+.btn-dl-add:hover { opacity: .85; }
+
+.details-list-wrap { max-height: 210px; overflow-y: auto; }
+.details-list-wrap::-webkit-scrollbar { width: 4px; }
+.details-list-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.detail-line {
+  display: grid; grid-template-columns: 1fr 104px 1fr 64px;
+  gap: 10px; align-items: center;
+  padding: 10px 12px; background: var(--card2);
+  border-radius: var(--r-sm); margin-bottom: 6px; font-size: .78rem;
+  border: 1px solid var(--border2); transition: background .3s;
+}
+.dl-nom   { font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dl-amt   { color: var(--green); font-family: var(--font-mono); font-weight: 600; text-align: right; }
+.dl-amt.d { color: var(--red); }
+.dl-motif { color: var(--muted); font-size: .72rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dl-actions { display: flex; gap: 5px; justify-content: flex-end; }
+.btn-dl-edit, .btn-dl-del {
+  background: none; border: none; cursor: pointer; font-size: .8rem;
+  padding: 4px 6px; border-radius: 5px; transition: all .15s; line-height: 1;
+}
+.btn-dl-edit { color: var(--muted); }
+.btn-dl-edit:hover { color: var(--gold2); background: var(--gold-glow); }
+.btn-dl-del  { color: var(--muted); }
+.btn-dl-del:hover  { color: var(--red); background: var(--red-dim); }
+
+.details-empty {
+  text-align: center; color: var(--muted); font-family: var(--font-mono);
+  font-size: .72rem; padding: 28px; font-style: italic;
+  border: 1px dashed var(--border); border-radius: var(--r-md);
+}
+
+.details-total-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--gold-glow); border: 1px solid rgba(212,168,67,.2);
+  border-radius: var(--r-sm);
+}
+.details-total-lbl { font-family: var(--font-mono); font-size: .63rem; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
+.details-total-val { font-family: var(--font-royal); font-size: 1.2rem; color: var(--gold2); font-weight: 700; }
+
+.modal-actions { display: flex; gap: 10px; }
+.btn-modal-cancel {
+  flex: 1; background: none; border: 1.5px solid var(--border);
+  border-radius: var(--r-sm); color: var(--muted);
+  font-family: var(--font-mono); font-size: .74rem;
+  padding: 12px; cursor: pointer; transition: all .2s;
+}
+.btn-modal-cancel:hover { border-color: var(--text2); color: var(--text); }
+.btn-modal-save {
+  flex: 2; background: var(--gold); color: #000; border: none;
+  border-radius: var(--r-sm); font-family: var(--font-royal);
+  font-weight: 700; font-size: .8rem; padding: 12px; cursor: pointer;
+  letter-spacing: .04em; transition: opacity .2s;
+}
+.btn-modal-save:hover { opacity: .87; }
+.btn-modal-save:disabled { opacity: .3; cursor: not-allowed; }
+
+/* ══════════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════════ */
+#toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: var(--card2); color: var(--text);
+  border: 1px solid var(--border); border-radius: 30px;
+  font-family: var(--font-mono); font-weight: 500; font-size: .78rem;
+  padding: 11px 24px; opacity: 0; pointer-events: none; z-index: 9999;
+  box-shadow: 0 8px 32px rgba(0,0,0,.3);
+  transition: opacity .3s, transform .3s cubic-bezier(.4,0,.2,1);
+  white-space: nowrap;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ══════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  header, .stats-grid, .panels-grid, .bottom-bar,
+  .info-bar { margin-left: 20px; margin-right: 20px; }
+  header { padding: 0 20px; }
+}
+@media (max-width: 768px) {
+  header, .stats-grid, .panels-grid, .bottom-bar,
+  .info-bar { margin-left: 14px; margin-right: 14px; }
+  header { padding: 0 14px; height: 58px; }
+  .header-date { display: none; }
+  .stats-grid  { grid-template-columns: 1fr; gap: 10px; }
+  .panels-grid { grid-template-columns: 1fr; }
+  .stat-value  { font-size: 1.5rem; }
+  .form-grid   { grid-template-columns: 1fr 1fr; }
+  .form-grid > :first-child { grid-column: 1 / -1; }
+  .form-grid .btn-add          { grid-column: 1 / 2; }
+  .form-grid .btn-details-open { grid-column: 2 / 3; }
+  .details-subform-grid { grid-template-columns: 1fr 96px 42px; gap: 7px; }
+  .details-subform-grid input:nth-child(3) { grid-column: 1 / -1; }
+  .modal-details { padding: 22px 18px; }
+  .logo-text { font-size: 1rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="logo-wrap">
+    <img src="logobr.jpeg" class="logo-img" alt="Band Royal" onerror="this.style.display='none'">
+    <div>
+      <div class="logo-text">BAND ROYAL</div>
+      <div class="logo-sub">Journal · Financier</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="header-date" id="dateDisplay"></div>
+    <button class="btn-theme" id="themeToggle" onclick="toggleTheme()" title="Mode jour / nuit">🌙</button>
+    <div class="mode-badge view" id="modeBadge">👁 Consultation</div>
+  </div>
+</header>
+
+<!-- ══ BARRES INFO ══ -->
+<div class="info-bar session" id="sessionBar">
+  <div class="info-bar-text">✔ &nbsp;Mode administrateur actif — ajout, modification et suppression autorisés</div>
+  <button class="btn-session-end" onclick="closeSession()">🔒 Terminer la session</button>
+</div>
+<div class="info-bar lock" id="lockCta">
+  <div class="info-bar-text">🔒 <strong>Mode consultation</strong> — Entrez le code pour modifier les données.</div>
+  <button class="btn-unlock" onclick="openPinModal('unlock')">🗝 Déverrouiller</button>
+</div>
+
+<!-- ══ STATS ══ -->
+<div class="stats-grid">
+  <div class="stat-card cred">
+    <div class="stat-icon">↑</div>
+    <div class="stat-label">Total Créditeur</div>
+    <div class="stat-value" id="totalCred">0 FCFA</div>
+    <div class="stat-sub" id="credNb">0 opération(s)</div>
+  </div>
+  <div class="stat-card deb">
+    <div class="stat-icon">↓</div>
+    <div class="stat-label">Total Débiteur</div>
+    <div class="stat-value" id="totalDeb">0 FCFA</div>
+    <div class="stat-sub" id="debNb">0 opération(s)</div>
+  </div>
+  <div class="stat-card bal">
+    <div class="stat-icon">⚖</div>
+    <div class="stat-label">Solde Net</div>
+    <div class="stat-value" id="soldeNet">0 FCFA</div>
+    <div class="stat-sub" id="soldeStatus">—</div>
+  </div>
+</div>
+
+<!-- ══ PANELS ══ -->
+<div class="panels-grid">
+
+  <!-- CRÉDITEUR -->
+  <div class="panel panel-cred">
+    <div class="panel-head">
+      <div class="panel-title-wrap">
+        <div class="panel-icon">↑</div>
+        <div class="panel-title">Créditeur — Entrées</div>
+      </div>
+      <div class="panel-badge" id="credBadge">0</div>
+    </div>
+    <div class="form-area locked" id="credForm" onclick="handleFormClick(event,'cred')">
+      <div class="form-grid">
+        <input type="text"   id="cDesc" placeholder="Nom de l'événement…">
+        <input type="date"   id="cDate">
+        <input type="number" id="cAmt"  placeholder="Montant FCFA" min="0" step="any">
+        <button class="btn-add btn-add-c" onclick="doAdd('cred')">Ajouter</button>
+        <button class="btn-details-open" onclick="openDetailsModal('cred',event)">+ Détails</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th style="width:32px">#</th>
+          <th>Événement</th>
+          <th style="width:106px">Date</th>
+          <th style="text-align:right;width:130px">Montant (FCFA)</th>
+          <th style="width:36px"></th>
+        </tr></thead>
+        <tbody id="credTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- DÉBITEUR -->
+  <div class="panel panel-deb">
+    <div class="panel-head">
+      <div class="panel-title-wrap">
+        <div class="panel-icon">↓</div>
+        <div class="panel-title">Débiteur — Sorties</div>
+      </div>
+      <div class="panel-badge" id="debBadge">0</div>
+    </div>
+    <div class="form-area locked" id="debForm" onclick="handleFormClick(event,'deb')">
+      <div class="form-grid">
+        <input type="text"   id="dDesc" placeholder="Nom de l'événement…">
+        <input type="date"   id="dDate">
+        <input type="number" id="dAmt"  placeholder="Montant FCFA" min="0" step="any">
+        <button class="btn-add btn-add-d" onclick="doAdd('deb')">Ajouter</button>
+        <button class="btn-details-open" onclick="openDetailsModal('deb',event)">+ Détails</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th style="width:32px">#</th>
+          <th>Événement</th>
+          <th style="width:106px">Date</th>
+          <th style="text-align:right;width:130px">Montant (FCFA)</th>
+          <th style="width:36px"></th>
+        </tr></thead>
+        <tbody id="debTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ EXPORT ══ -->
+<div class="bottom-bar">
+  <button class="btn-export" onclick="exportExcel()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+    Exporter en Excel
+  </button>
+  <div class="export-hint">Créditeur · Débiteur · Détails · Solde net</div>
+</div>
+
+<!-- ══ MODAL PIN ══ -->
+<div class="modal-overlay" id="pinOverlay">
+  <div class="modal">
+    <img src="logobr.jpeg" class="modal-logo" alt="" onerror="this.style.display='none'">
+    <div class="modal-title">BAND ROYAL</div>
+    <div class="modal-sub" id="modalSub">Code secret requis</div>
+    <div class="pin-field-wrap">
+      <input type="password" id="pinField" inputmode="numeric" autocomplete="off"
+             placeholder="Entrez le code" maxlength="12" onkeydown="onPinKey(event)">
+    </div>
+    <div class="numpad">
+      <button class="np-btn" onclick="pinPress('1')">1</button>
+      <button class="np-btn" onclick="pinPress('2')">2</button>
+      <button class="np-btn" onclick="pinPress('3')">3</button>
+      <button class="np-btn" onclick="pinPress('4')">4</button>
+      <button class="np-btn" onclick="pinPress('5')">5</button>
+      <button class="np-btn" onclick="pinPress('6')">6</button>
+      <button class="np-btn" onclick="pinPress('7')">7</button>
+      <button class="np-btn" onclick="pinPress('8')">8</button>
+      <button class="np-btn" onclick="pinPress('9')">9</button>
+      <button class="np-btn cancel" onclick="closePinModal()">Annuler</button>
+      <button class="np-btn" onclick="pinPress('0')">0</button>
+      <button class="np-btn enter" onclick="pinSubmit()">✓</button>
+    </div>
+    <div class="pin-error"    id="pinError"></div>
+    <div class="pin-attempts" id="pinAttempts"></div>
+  </div>
+</div>
+
+<!-- ══ MODAL DÉTAILS ══ -->
+<div class="details-overlay" id="detailsOverlay">
+  <div class="modal-details">
+    <div class="details-header">
+      <div class="details-event-name" id="detailsEventName">ÉVÉNEMENT</div>
+      <div class="details-event-date" id="detailsEventDate">—</div>
+      <div class="details-ref-amt"    id="detailsRefAmt"></div>
+    </div>
+    <div class="details-subform">
+      <div class="details-subform-lbl">Nouvelle ligne de détail</div>
+      <div class="details-subform-grid">
+        <input type="text"   id="dlNom"     placeholder="Nom…">
+        <input type="number" id="dlMontant" placeholder="Montant" min="0" step="any">
+        <input type="text"   id="dlMotif"   placeholder="Motif…">
+        <button class="btn-dl-add" onclick="addDetailLine()" title="Ajouter">+</button>
+      </div>
+    </div>
+    <div class="details-list-wrap" id="detailsListWrap">
+      <div class="details-empty">Aucune ligne — saisissez les détails ci-dessus</div>
+    </div>
+    <div class="details-total-bar">
+      <div class="details-total-lbl">Total des détails</div>
+      <div class="details-total-val" id="detailsTotalVal">0 FCFA</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeDetailsModal()">Annuler</button>
+      <button class="btn-modal-save" id="btnSaveDetails" onclick="saveEventWithDetails()" disabled>
+        Enregistrer l'événement
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ════════════════════════════════════
+   MOT DE PASSE
+════════════════════════════════════ */
+const SECRET    = '0157578726';
+const MAX_TRIES = 5;
+
+/* ── État ── */
+let isAdmin       = false;
+let pendingAction = null;
+let tries         = parseInt(localStorage.getItem('br_tries') || '0');
+let lockedUntil   = parseInt(localStorage.getItem('br_lock')  || '0');
+let credEntries   = JSON.parse(localStorage.getItem('br_cred') || '[]');
+let debEntries    = JSON.parse(localStorage.getItem('br_deb')  || '[]');
+
+/* ── État modal détails ── */
+let tempDetails     = [];
+let detailModalType = null;
+let editingEntryId  = null;
+let expandedRows    = new Set();
+
+/* ── Thème ── */
+let isDark = localStorage.getItem('br_theme') !== 'light';
+
+/* ── Utilitaires ── */
+const today   = new Date().toISOString().split('T')[0];
+const fmt     = n => new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' FCFA';
+const fmtDate = d => d ? new Date(d+'T00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+const escHtml = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function save() {
+  localStorage.setItem('br_cred', JSON.stringify(credEntries));
+  localStorage.setItem('br_deb',  JSON.stringify(debEntries));
+}
+
+/* ════════════════════════════════════
+   INIT
+════════════════════════════════════ */
+document.getElementById('dateDisplay').textContent =
+  new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+document.getElementById('cDate').value = today;
+document.getElementById('dDate').value = today;
+document.getElementById('lockCta').classList.add('visible');
+applyTheme();
+render();
+
+/* ════════════════════════════════════
+   THÈME
+════════════════════════════════════ */
+function toggleTheme() {
+  isDark = !isDark;
+  localStorage.setItem('br_theme', isDark ? 'dark' : 'light');
+  applyTheme();
+}
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  document.getElementById('themeToggle').textContent = isDark ? '☀️' : '🌙';
+}
+
+/* ════════════════════════════════════
+   MODAL PIN
+════════════════════════════════════ */
+function openPinModal(context, type, action, id) {
+  const labels = {
+    unlock:      'Déverrouiller la session',
+    add:         'Ajouter une opération',
+    del:         'Confirmer la suppression',
+    opendetails: 'Accès aux détails',
+  };
+  document.getElementById('modalSub').textContent     = labels[context] || 'Code requis';
+  pendingAction = (context !== 'unlock') ? {type, action, id} : null;
+  document.getElementById('pinField').value           = '';
+  document.getElementById('pinError').textContent     = '';
+  document.getElementById('pinAttempts').textContent  = '';
+  document.getElementById('pinOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('pinField').focus(), 80);
+}
+function closePinModal() {
+  document.getElementById('pinOverlay').classList.remove('open');
+  document.getElementById('pinField').value = '';
+  pendingAction = null;
+}
+function pinPress(d) {
+  const el = document.getElementById('pinField');
+  if (el.value.length >= 12) return;
+  el.value += d;
+  document.getElementById('pinError').textContent = '';
+}
+function onPinKey(e) {
+  if (e.key === 'Enter')  { e.preventDefault(); pinSubmit(); }
+  if (e.key === 'Escape') { closePinModal(); }
+  if (e.key.length === 1 && !/\d/.test(e.key)) e.preventDefault();
+}
+function pinSubmit() {
+  const val = document.getElementById('pinField').value;
+  const now = Date.now();
+  if (lockedUntil > now) {
+    showPinErr('Bloqué — ' + Math.ceil((lockedUntil-now)/1000) + 's');
+    document.getElementById('pinField').value = '';
+    return;
+  }
+  if (val === SECRET) {
+    tries = 0; localStorage.setItem('br_tries','0'); localStorage.removeItem('br_lock');
+    const pa = pendingAction;
+    closePinModal(); activateSession();
+    if (pa) {
+      if      (pa.action === 'add')         doAdd(pa.type);
+      else if (pa.action === 'del')         doDelete(pa.type, pa.id);
+      else if (pa.action === 'opendetails') openDetailsModal(pa.type, null, true);
+      else if (pa.action === 'editdetails') editEventDetails(pa.type, pa.id, null, true);
+    }
+  } else {
+    tries++; localStorage.setItem('br_tries', tries);
+    document.getElementById('pinField').value = '';
+    if (tries >= MAX_TRIES) {
+      const until = Date.now() + 60000;
+      localStorage.setItem('br_lock', until); lockedUntil = until;
+      showPinErr('Trop de tentatives — bloqué 60s');
+    } else {
+      showPinErr('Code incorrect !');
+      document.getElementById('pinAttempts').textContent = 'Tentatives restantes : ' + (MAX_TRIES - tries);
+    }
+  }
+}
+function showPinErr(msg) {
+  const el = document.getElementById('pinError');
+  el.textContent = ''; requestAnimationFrame(() => { el.textContent = msg; });
+}
+
+/* ════════════════════════════════════
+   SESSION
+════════════════════════════════════ */
+function activateSession() {
+  isAdmin = true;
+  document.getElementById('modeBadge').textContent = '✏️ Admin';
+  document.getElementById('modeBadge').className   = 'mode-badge edit';
+  document.getElementById('sessionBar').classList.add('visible');
+  document.getElementById('lockCta').classList.remove('visible');
+  document.getElementById('credForm').classList.remove('locked');
+  document.getElementById('debForm').classList.remove('locked');
+  render();
+}
+function closeSession() {
+  isAdmin = false;
+  document.getElementById('modeBadge').textContent = '👁 Consultation';
+  document.getElementById('modeBadge').className   = 'mode-badge view';
+  document.getElementById('sessionBar').classList.remove('visible');
+  document.getElementById('lockCta').classList.add('visible');
+  document.getElementById('credForm').classList.add('locked');
+  document.getElementById('debForm').classList.add('locked');
+  render();
+}
+function handleFormClick(e, type) {
+  if (!isAdmin) { e.stopPropagation(); openPinModal('add', type, 'add'); }
+}
+
+/* ════════════════════════════════════
+   MODAL DÉTAILS — CRÉER
+════════════════════════════════════ */
+function openDetailsModal(type, evt, skipAuth) {
+  if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
+  if (!skipAuth && !isAdmin) { openPinModal('opendetails', type, 'opendetails'); return; }
+  const ids = type === 'cred' ? {desc:'cDesc',date:'cDate'} : {desc:'dDesc',date:'dDate'};
+  const descEl = document.getElementById(ids.desc), dateEl = document.getElementById(ids.date);
+  const desc = descEl.value.trim(), date = dateEl.value;
+  if (!desc) {
+    descEl.style.borderColor = 'var(--red)'; setTimeout(() => descEl.style.borderColor = '', 1500);
+    showToast('⚠ Entrez d\'abord le nom de l\'événement'); return;
+  }
+  if (!date) { dateEl.style.borderColor = 'var(--red)'; setTimeout(() => dateEl.style.borderColor = '', 1500); return; }
+  detailModalType = type; editingEntryId = null; tempDetails = [];
+  document.getElementById('detailsEventName').textContent = desc.toUpperCase();
+  document.getElementById('detailsEventDate').textContent = fmtDate(date);
+  document.getElementById('detailsRefAmt').style.display  = 'none';
+  document.getElementById('btnSaveDetails').textContent   = 'Enregistrer l\'événement';
+  clearDetailForm(); renderDetailLines();
+  document.getElementById('detailsOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('dlNom').focus(), 100);
+}
+
+/* ════════════════════════════════════
+   MODAL DÉTAILS — ÉDITER UN EXISTANT
+════════════════════════════════════ */
+function editEventDetails(type, id, evt, skipAuth) {
+  if (evt && typeof evt.stopPropagation === 'function') evt.stopPropagation();
+  if (!skipAuth && !isAdmin) { openPinModal('opendetails', type, 'editdetails', id); return; }
+  const entries = type === 'cred' ? credEntries : debEntries;
+  const entry   = entries.find(e => e.id === id);
+  if (!entry) return;
+  detailModalType = type; editingEntryId = id;
+  tempDetails = (entry.details || []).map(d => ({...d}));
+  document.getElementById('detailsEventName').textContent = entry.desc.toUpperCase();
+  document.getElementById('detailsEventDate').textContent = fmtDate(entry.date);
+  const refEl = document.getElementById('detailsRefAmt');
+  refEl.style.display = 'block';
+  refEl.textContent   = '💰 Montant actuel : ' + fmt(entry.amt) + ' — les détails doivent correspondre';
+  document.getElementById('btnSaveDetails').textContent = 'Mettre à jour l\'événement';
+  clearDetailForm(); renderDetailLines();
+  document.getElementById('detailsOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('dlNom').focus(), 100);
+}
+
+function closeDetailsModal() {
+  document.getElementById('detailsOverlay').classList.remove('open');
+  tempDetails = []; detailModalType = null; editingEntryId = null;
+}
+function clearDetailForm() {
+  document.getElementById('dlNom').value     = '';
+  document.getElementById('dlMontant').value = '';
+  document.getElementById('dlMotif').value   = '';
+}
+
+/* ── Lignes de détail ── */
+function addDetailLine() {
+  const nomEl=document.getElementById('dlNom'), montantEl=document.getElementById('dlMontant'), motifEl=document.getElementById('dlMotif');
+  const nom=nomEl.value.trim(), montant=parseFloat(montantEl.value), motif=motifEl.value.trim()||'—';
+  let ok=true;
+  if (!nom)                      { nomEl.style.borderColor='var(--red)';     setTimeout(()=>nomEl.style.borderColor='',1500);     ok=false; }
+  if (isNaN(montant)||montant<=0){ montantEl.style.borderColor='var(--red)'; setTimeout(()=>montantEl.style.borderColor='',1500); ok=false; }
+  if (!ok) return;
+  tempDetails.push({id:Date.now(), nom, montant, motif});
+  clearDetailForm(); nomEl.focus(); renderDetailLines();
+}
+function editDetailLine(id) {
+  const d = tempDetails.find(x => x.id === id); if (!d) return;
+  document.getElementById('dlNom').value     = d.nom;
+  document.getElementById('dlMontant').value = d.montant;
+  document.getElementById('dlMotif').value   = d.motif !== '—' ? d.motif : '';
+  removeDetailLine(id); document.getElementById('dlNom').focus();
+}
+function removeDetailLine(id) { tempDetails=tempDetails.filter(d=>d.id!==id); renderDetailLines(); }
+
+function renderDetailLines() {
+  const wrap=document.getElementById('detailsListWrap');
+  const total=tempDetails.reduce((s,d)=>s+d.montant,0);
+  const isD=detailModalType==='deb';
+  document.getElementById('detailsTotalVal').textContent=fmt(total);
+  document.getElementById('btnSaveDetails').disabled=tempDetails.length===0;
+  if (!tempDetails.length) {
+    wrap.innerHTML='<div class="details-empty">Aucune ligne — saisissez les détails ci-dessus</div>'; return;
+  }
+  wrap.innerHTML=tempDetails.map(d=>`
+    <div class="detail-line">
+      <span class="dl-nom">${escHtml(d.nom)}</span>
+      <span class="dl-amt${isD?' d':''}">${fmt(d.montant)}</span>
+      <span class="dl-motif">${escHtml(d.motif)}</span>
+      <div class="dl-actions">
+        <button class="btn-dl-edit" onclick="editDetailLine(${d.id})"   title="Modifier">✏</button>
+        <button class="btn-dl-del"  onclick="removeDetailLine(${d.id})" title="Supprimer">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+/* ── Enregistrer ── */
+function saveEventWithDetails() {
+  if (!tempDetails.length) return;
+  const type=detailModalType, total=tempDetails.reduce((s,d)=>s+d.montant,0);
+  if (editingEntryId !== null) {
+    const arr=type==='cred'?credEntries:debEntries;
+    const entry=arr.find(e=>e.id===editingEntryId);
+    if (entry) { entry.details=tempDetails.map(d=>({...d})); entry.amt=total; }
+    const n=tempDetails.length; closeDetailsModal(); save(); render();
+    showToast(`✔ Mis à jour — ${n} détail${n>1?'s':''}, total ${fmt(total)}`);
+  } else {
+    const ids=type==='cred'?{desc:'cDesc',date:'cDate',amt:'cAmt'}:{desc:'dDesc',date:'dDate',amt:'dAmt'};
+    const desc=document.getElementById(ids.desc).value.trim();
+    const date=document.getElementById(ids.date).value;
+    const entry={id:Date.now(), desc, date, amt:total, details:tempDetails.map(d=>({...d}))};
+    if (type==='cred') credEntries.push(entry); else debEntries.push(entry);
+    document.getElementById(ids.desc).value=''; document.getElementById(ids.amt).value='';
+    const n=tempDetails.length; closeDetailsModal(); save(); render();
+    showToast(`✔ Ajouté — ${n} détail${n>1?'s':''}, total ${fmt(total)}`);
+  }
+}
+
+/* ════════════════════════════════════
+   EXPAND
+════════════════════════════════════ */
+function toggleExpand(id) {
+  if (expandedRows.has(id)) expandedRows.delete(id); else expandedRows.add(id);
+  render();
+}
+
+/* ════════════════════════════════════
+   CRUD
+════════════════════════════════════ */
+function doAdd(type) {
+  if (!isAdmin) { openPinModal('add',type,'add'); return; }
+  const ids=type==='cred'?{desc:'cDesc',date:'cDate',amt:'cAmt'}:{desc:'dDesc',date:'dDate',amt:'dAmt'};
+  const descEl=document.getElementById(ids.desc), dateEl=document.getElementById(ids.date), amtEl=document.getElementById(ids.amt);
+  const desc=descEl.value.trim(), date=dateEl.value, amt=parseFloat(amtEl.value);
+  let ok=true;
+  if (!desc)             { descEl.style.borderColor='var(--red)'; setTimeout(()=>descEl.style.borderColor='',1500); ok=false; }
+  if (isNaN(amt)||amt<=0){ amtEl.style.borderColor='var(--red)';  setTimeout(()=>amtEl.style.borderColor='',1500);  ok=false; }
+  if (!ok) return;
+  const entry={id:Date.now(), desc, date, amt, details:null};
+  if (type==='cred') credEntries.push(entry); else debEntries.push(entry);
+  descEl.value=''; amtEl.value=''; descEl.focus();
+  save(); render(); showToast('✔ Opération ajoutée');
+}
+function requestDelete(type, id) {
+  if (!isAdmin) { openPinModal('del',type,'del',id); return; }
+  doDelete(type,id);
+}
+function doDelete(type, id) {
+  if (type==='cred') credEntries=credEntries.filter(e=>e.id!==id);
+  else               debEntries =debEntries.filter(e=>e.id!==id);
+  expandedRows.delete(id); save(); render(); showToast('🗑 Opération supprimée');
+}
+
+/* ════════════════════════════════════
+   RENDER
+════════════════════════════════════ */
+function render() {
+  const totalC=credEntries.reduce((s,e)=>s+e.amt,0);
+  const totalD=debEntries.reduce((s,e)=>s+e.amt,0);
+  const solde=totalC-totalD;
+  document.getElementById('totalCred').textContent=('+'+fmt(totalC));
+  document.getElementById('totalDeb').textContent =('-'+fmt(totalD));
+  document.getElementById('credNb').textContent   =credEntries.length+' opération(s)';
+  document.getElementById('debNb').textContent    =debEntries.length +' opération(s)';
+  document.getElementById('credBadge').textContent=credEntries.length;
+  document.getElementById('debBadge').textContent =debEntries.length;
+  const soldeEl=document.getElementById('soldeNet');
+  soldeEl.textContent=(solde>=0?'+':'')+fmt(solde);
+  document.getElementById('soldeStatus').textContent=solde>0?'✔ Excédent':solde<0?'✘ Déficit':'◉ Équilibré';
+  renderTable('credTable',credEntries,'cred','amt-c',totalC);
+  renderTable('debTable', debEntries, 'deb', 'amt-d',totalD);
+}
+
+function renderTable(tbodyId, entries, type, amtClass, total) {
+  const tbody=document.getElementById(tbodyId);
+  tbody.innerHTML='';
+  if (!entries.length) {
+    tbody.innerHTML=`<tr class="empty-row"><td colspan="5">Aucune opération enregistrée</td></tr>`; return;
+  }
+  const sorted=[...entries].sort((a,b)=>b.date.localeCompare(a.date));
+  const dsubCls=type==='cred'?'dsub-amt c':'dsub-amt d';
+  sorted.forEach((e,i) => {
+    const hasDetails=e.details&&e.details.length>0;
+    const isExpanded=expandedRows.has(e.id);
+    const delBtn=isAdmin
+      ?`<button class="btn-del unlocked" onclick="requestDelete('${type}',${e.id})" title="Supprimer">✕</button>`
+      :`<button class="btn-del locked-del" onclick="requestDelete('${type}',${e.id})" title="Code requis">🔒</button>`;
+    const badge=hasDetails?`<span class="has-details-badge">${e.details.length} détail${e.details.length>1?'s':''}</span>`:'';
+    const expandBtn=hasDetails
+      ?`<button class="btn-expand ${isExpanded?'expanded':''}" onclick="toggleExpand(${e.id})" title="${isExpanded?'Masquer':'Détails'}">${isExpanded?'▼':'▶'}</button>`:'';
+    const editBtn=isAdmin
+      ?`<button class="btn-edit-ev" onclick="editEventDetails('${type}',${e.id},event)" title="${hasDetails?'Modifier les détails':'Établir les détails'}">✏</button>`:'';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td class="num-c">${sorted.length-i}</td>
+      <td class="desc-c" title="${escHtml(e.desc)}">${escHtml(e.desc)}${badge}${expandBtn}${editBtn}</td>
+      <td class="date-c">${fmtDate(e.date)}</td>
+      <td class="${amtClass}">${fmt(e.amt)}</td>
+      <td>${delBtn}</td>`;
+    tbody.appendChild(tr);
+    if (hasDetails&&isExpanded) {
+      e.details.forEach(d => {
+        const sub=document.createElement('tr'); sub.className='detail-sub-row';
+        sub.innerHTML=`<td></td><td class="dsub-nom">└ ${escHtml(d.nom)}</td><td class="dsub-motif">${escHtml(d.motif)}</td><td class="${dsubCls}">${fmt(d.montant)}</td><td></td>`;
+        tbody.appendChild(sub);
+      });
+    }
+  });
+  const tr=document.createElement('tr'); tr.className='total-row';
+  tr.innerHTML=`<td></td><td colspan="2" class="lbl">TOTAL GÉNÉRAL</td><td class="${amtClass}" style="font-size:.86rem">${fmt(total)}</td><td></td>`;
+  tbody.appendChild(tr);
+}
+
+/* ════════════════════════════════════
+   EXPORT EXCEL
+════════════════════════════════════ */
+function exportExcel() {
+  const wb=XLSX.utils.book_new();
+  const totalC=credEntries.reduce((s,e)=>s+e.amt,0);
+  const totalD=debEntries.reduce((s,e)=>s+e.amt,0);
+  const solde=totalC-totalD, fm='#,##0 "FCFA"';
+  buildSheet(wb,'Créditeur',credEntries,'Montant Créditeur (FCFA)',totalC,fm);
+  buildSheet(wb,'Débiteur', debEntries, 'Montant Débiteur (FCFA)', totalD,fm);
+  buildSolde(wb,totalC,totalD,solde,fm);
+  XLSX.writeFile(wb,'BandRoyal_'+today+'.xlsx');
+  showToast('👑 Exporté avec succès !');
+}
+function buildSheet(wb,name,entries,amtLabel,total,fm) {
+  const sorted=[...entries].sort((a,b)=>b.date.localeCompare(a.date));
+  const aoa=[['BAND ROYAL — '+name.toUpperCase(),'','',''],['N°','Événement / Description','Date',amtLabel]];
+  sorted.forEach((e,i) => {
+    aoa.push([i+1, e.desc, new Date(e.date+'T00:00'), e.amt]);
+    if (e.details&&e.details.length) e.details.forEach(d => { const m=d.motif!=='—'?` (${d.motif})`:''; aoa.push(['',`  └ ${d.nom}${m}`,'',d.montant]); });
+  });
+  aoa.push(['','','TOTAL',total]);
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:3}}]; ws['!cols']=[{wch:5},{wch:46},{wch:16},{wch:26}]; ws['!rows']=[{hpt:34},{hpt:24}];
+  for (let i=2;i<aoa.length-1;i++) { const dr=XLSX.utils.encode_cell({r:i,c:2}), mr=XLSX.utils.encode_cell({r:i,c:3}); if(ws[dr]&&aoa[i][2] instanceof Date) ws[dr].z='DD/MM/YYYY'; if(ws[mr]&&typeof aoa[i][3]==='number') ws[mr].z=fm; }
+  const tr=XLSX.utils.encode_cell({r:aoa.length-1,c:3}); if(ws[tr]) ws[tr].z=fm;
+  XLSX.utils.book_append_sheet(wb,ws,name);
+}
+function buildSolde(wb,totalC,totalD,solde,fm) {
+  const lbl=solde>=0?'✔ SOLDE CRÉDITEUR : '+new Intl.NumberFormat('fr-FR').format(Math.round(solde))+' FCFA':'✘ SOLDE DÉBITEUR : '+new Intl.NumberFormat('fr-FR').format(Math.round(Math.abs(solde)))+' FCFA';
+  const aoa=[['BAND ROYAL — VUE GLOBALE DU SOLDE','','',''],['','','',''],['Rubrique','Total Créditeur','Total Débiteur','SOLDE NET'],['Ordre du jour',totalC,totalD,solde],['','','',''],[ lbl,'','',''],['','','',''],['Date export',new Date().toLocaleDateString('fr-FR'),'','']];
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:3}},{s:{r:5,c:0},e:{r:5,c:3}}]; ws['!cols']=[{wch:28},{wch:22},{wch:22},{wch:22}]; ws['!rows']=[{hpt:36},{hpt:6},{hpt:22},{hpt:20},{hpt:8},{hpt:46}];
+  ['B4','C4','D4'].forEach(r=>{if(ws[r])ws[r].z=fm;}); XLSX.utils.book_append_sheet(wb,ws,'Solde');
+}
+
+/* ════════════════════════════════════
+   TOAST
+════════════════════════════════════ */
+let toastTimer;
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+/* ════════════════════════════════════
+   CLAVIER
+════════════════════════════════════ */
+document.addEventListener('keydown', e => {
+  if (document.getElementById('detailsOverlay').classList.contains('open')) {
+    if (e.key==='Escape') { closeDetailsModal(); return; }
+    if (e.key==='Enter' && ['dlNom','dlMontant','dlMotif'].includes(document.activeElement?.id)) { e.preventDefault(); addDetailLine(); return; }
+    return;
+  }
+  if (!document.getElementById('pinOverlay').classList.contains('open')) return;
+  if (e.key==='Escape') closePinModal();
+});
+</script>
+</body>
+</html>
