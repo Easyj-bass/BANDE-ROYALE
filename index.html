@@ -425,6 +425,27 @@ tr.total-row .lbl {
 .btn-export:hover  { box-shadow: 0 6px 32px rgba(212,168,67,.4); opacity: .93; }
 .btn-export:active { transform: scale(.97); }
 .export-hint { font-size: .7rem; color: var(--muted); font-family: var(--font-mono); line-height: 1.8; }
+.btn-save {
+  background: linear-gradient(135deg, #1a6e3f, var(--green));
+  color: #000; border: none; border-radius: var(--r-md);
+  font-family: var(--font-royal); font-weight: 700; font-size: .84rem;
+  padding: 13px 30px; cursor: pointer; letter-spacing: .06em;
+  display: flex; align-items: center; gap: 9px;
+  box-shadow: 0 4px 24px rgba(16,217,138,.2);
+  transition: box-shadow .2s, transform .12s, opacity .2s;
+}
+.btn-save:hover  { box-shadow: 0 6px 32px rgba(16,217,138,.35); opacity: .93; }
+.btn-save:active { transform: scale(.97); }
+.btn-save:disabled { opacity: .35; cursor: not-allowed; box-shadow: none; }
+.unsaved-badge {
+  display: none; align-items: center; gap: 8px;
+  font-family: var(--font-mono); font-size: .69rem;
+  background: rgba(244,63,94,.1); border: 1px solid rgba(244,63,94,.25);
+  color: var(--red); border-radius: 20px; padding: 6px 14px;
+}
+.unsaved-badge.visible { display: flex; }
+.unsaved-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); animation: pulse 1.5s infinite; flex-shrink: 0; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
 
 /* ══════════════════════════════════════════════════
    MODALS — BASE
@@ -760,16 +781,37 @@ tr.total-row .lbl {
 
 </div>
 
-<!-- ══ EXPORT ══ -->
+<!-- ══ EXPORT & SAUVEGARDE ══ -->
 <div class="bottom-bar">
+
+  <!-- Bouton Sauvegarder (partage) -->
+  <button class="btn-save" id="btnSaveFile" onclick="saveToFile()" disabled>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+      <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+    </svg>
+    Sauvegarder le fichier
+  </button>
+
+  <!-- Indicateur modifications en attente -->
+  <div class="unsaved-badge" id="unsavedBadge">
+    <div class="unsaved-dot"></div>
+    <span>0 modification(s) non sauvegardée(s)</span>
+  </div>
+
+  <!-- Bouton Excel -->
   <button class="btn-export" onclick="exportExcel()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
       <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
     </svg>
-    Exporter en Excel
+    Exporter Excel
   </button>
-  <div class="export-hint">Créditeur · Débiteur · Détails · Solde net</div>
+
+  <div class="export-hint">
+    💾 Sauvegarder génère un nouveau <strong>index.html</strong> à remplacer sur le dossier partagé<br>
+    📊 Excel pour consultation uniquement
+  </div>
 </div>
 
 <!-- ══ MODAL PIN ══ -->
@@ -836,6 +878,11 @@ tr.total-row .lbl {
 
 <div id="toast"></div>
 
+<!-- ██ BASE DE DONNÉES INTÉGRÉE — ne pas modifier manuellement ██ -->
+<script id="datastore">/* @@DATA@@ */
+var INIT_DATA = {"cred":[],"deb":[]};
+/* @@DATA@@ */</script>
+
 <script>
 /* ════════════════════════════════════
    MOT DE PASSE
@@ -848,8 +895,11 @@ let isAdmin       = false;
 let pendingAction = null;
 let tries         = parseInt(localStorage.getItem('br_tries') || '0');
 let lockedUntil   = parseInt(localStorage.getItem('br_lock')  || '0');
-let credEntries   = JSON.parse(localStorage.getItem('br_cred') || '[]');
-let debEntries    = JSON.parse(localStorage.getItem('br_deb')  || '[]');
+/* Données depuis le fichier (source principale) */
+let credEntries   = (INIT_DATA.cred && INIT_DATA.cred.length) ? INIT_DATA.cred : JSON.parse(localStorage.getItem('br_cred') || '[]');
+let debEntries    = (INIT_DATA.deb  && INIT_DATA.deb.length)  ? INIT_DATA.deb  : JSON.parse(localStorage.getItem('br_deb')  || '[]');
+/* Empreinte de l'état sauvegardé pour détecter les modifications */
+let _savedStamp   = JSON.stringify({c: credEntries, d: debEntries});
 
 /* ── État modal détails ── */
 let tempDetails     = [];
@@ -869,6 +919,40 @@ const escHtml = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replac
 function save() {
   localStorage.setItem('br_cred', JSON.stringify(credEntries));
   localStorage.setItem('br_deb',  JSON.stringify(debEntries));
+  updateUnsavedBadge();
+}
+
+function updateUnsavedBadge() {
+  const stamp  = JSON.stringify({c: credEntries, d: debEntries});
+  const changed = stamp !== _savedStamp;
+  const badge   = document.getElementById('unsavedBadge');
+  const btn     = document.getElementById('btnSaveFile');
+  if (!badge || !btn) return;
+  badge.classList.toggle('visible', changed);
+  const n = credEntries.length + debEntries.length;
+  const nSaved = (JSON.parse(_savedStamp||'{}').c||[]).length + (JSON.parse(_savedStamp||'{}').d||[]).length;
+  badge.querySelector('span').textContent = Math.abs(n - nSaved) + ' modification(s) non sauvegardée(s)';
+  btn.disabled = !isAdmin || !changed;
+}
+
+function saveToFile() {
+  if (!isAdmin) return;
+  const data    = JSON.stringify({cred: credEntries, deb: debEntries});
+  let   html    = document.documentElement.outerHTML;
+  /* Remplace le bloc @@DATA@@ avec les données actuelles */
+  html = html.replace(
+    /\/\* @@DATA@@ \*\/[\s\S]*?\/\* @@DATA@@ \*\//,
+    '/* @@DATA@@ */\nvar INIT_DATA = ' + data + ';\n/* @@DATA@@ */'
+  );
+  const blob = new Blob([html], {type: 'text/html;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = 'index.html';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  _savedStamp = JSON.stringify({c: credEntries, d: debEntries});
+  updateUnsavedBadge();
+  showToast('💾 Fichier généré — remplacez index.html sur le dossier partagé !');
 }
 
 /* ════════════════════════════════════
@@ -881,6 +965,7 @@ document.getElementById('dDate').value = today;
 document.getElementById('lockCta').classList.add('visible');
 applyTheme();
 render();
+updateUnsavedBadge();
 
 /* ════════════════════════════════════
    THÈME
@@ -976,7 +1061,7 @@ function activateSession() {
   document.getElementById('lockCta').classList.remove('visible');
   document.getElementById('credForm').classList.remove('locked');
   document.getElementById('debForm').classList.remove('locked');
-  render();
+  render(); updateUnsavedBadge();
 }
 function closeSession() {
   isAdmin = false;
@@ -986,7 +1071,7 @@ function closeSession() {
   document.getElementById('lockCta').classList.add('visible');
   document.getElementById('credForm').classList.add('locked');
   document.getElementById('debForm').classList.add('locked');
-  render();
+  render(); updateUnsavedBadge();
 }
 function handleFormClick(e, type) {
   if (!isAdmin) { e.stopPropagation(); openPinModal('add', type, 'add'); }
