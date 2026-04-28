@@ -181,15 +181,18 @@ header {
   border: 1px solid var(--border); background: var(--card2);
   transition: border-color .3s, background .3s;
 }
-.db-bar.connected { border-color: rgba(16,217,138,.3); background: var(--green-dim); }
-.db-bar.disconnected { border-color: rgba(244,63,94,.2); background: var(--red-dim); }
+.db-bar.db-ok     { border-color: rgba(16,217,138,.3); background: var(--green-dim); }
+.db-bar.db-warn   { border-color: rgba(212,168,67,.3); background: var(--gold-glow); }
+.db-bar.db-err    { border-color: rgba(244,63,94,.2);  background: var(--red-dim); }
 .db-status-wrap { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.db-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.db-bar.connected .db-dot { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
-.db-bar.disconnected .db-dot { background: var(--red); }
+.db-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--muted); }
+.db-bar.db-ok   .db-dot { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
+.db-bar.db-warn .db-dot { background: var(--gold); }
+.db-bar.db-err  .db-dot { background: var(--red); }
 .db-status-text { font-family: var(--font-mono); font-size: .67rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.db-bar.connected .db-status-text { color: var(--green); }
-.db-bar.disconnected .db-status-text { color: var(--text2); }
+.db-bar.db-ok   .db-status-text { color: var(--green); }
+.db-bar.db-warn .db-status-text { color: var(--gold); }
+.db-bar.db-err  .db-status-text { color: var(--red); }
 .db-actions { display: flex; gap: 8px; flex-shrink: 0; }
 .btn-db-connect {
   background: var(--gold); color: #000; border: none; border-radius: var(--r-sm);
@@ -198,10 +201,90 @@ header {
   transition: opacity .2s; white-space: nowrap;
 }
 .btn-db-connect:hover { opacity: .85; }
+
+/* ══ Modal config Google Sheets ══ */
+.modal-fb {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r-xl); padding: 32px 30px; width: 520px; max-width: 100%;
+  max-height: calc(100vh - 40px); overflow-y: auto;
+  box-shadow: var(--shadow-deep);
+  animation: popIn .28s cubic-bezier(.34,1.56,.64,1);
+  transition: background .3s;
+}
+.fb-steps {
+  background: var(--card2); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 14px 16px; margin-bottom: 16px;
+}
+.fb-steps-title {
+  font-family: var(--font-mono); font-size: .6rem; color: var(--gold);
+  text-transform: uppercase; letter-spacing: .13em; margin-bottom: 10px;
+}
+.fb-step {
+  display: flex; gap: 10px; align-items: flex-start;
+  font-size: .74rem; color: var(--text2); margin-bottom: 8px; line-height: 1.5;
+}
+.fb-step:last-child { margin-bottom: 0; }
+.fb-step-n {
+  width: 20px; height: 20px; border-radius: 50%; background: var(--gold-glow);
+  border: 1px solid var(--gold-dim); color: var(--gold);
+  font-family: var(--font-mono); font-size: .6rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+}
+.fb-step strong { color: var(--text); }
+.fb-config-lbl {
+  font-family: var(--font-mono); font-size: .6rem; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .12em; margin-bottom: 6px;
+}
+.fb-config-textarea {
+  width: 100%; min-height: 110px; resize: vertical;
+  background: var(--input-bg); border: 1.5px solid var(--border);
+  border-radius: var(--r-sm); color: var(--text);
+  font-family: var(--font-mono); font-size: .72rem; padding: 10px 12px;
+  outline: none; transition: border-color .2s, box-shadow .2s;
+}
+.fb-config-textarea:focus { border-color: var(--gold-dim); box-shadow: 0 0 0 3px rgba(212,168,67,.12); }
+.fb-error { font-family: var(--font-mono); font-size: .68rem; color: var(--red); margin-top: 8px; min-height: 18px; }
+.fb-code-wrap {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r-md); overflow: hidden; margin-bottom: 4px;
+}
+.fb-code-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 14px; border-bottom: 1px solid var(--border);
+  background: var(--card3);
+}
+.fb-code-head-lbl { font-family: var(--font-mono); font-size: .58rem; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; }
+.btn-copy-code {
+  background: var(--gold-glow); border: 1px solid var(--gold-dim);
+  border-radius: var(--r-sm); color: var(--gold);
+  font-family: var(--font-mono); font-size: .6rem;
+  padding: 4px 10px; cursor: pointer; transition: var(--t);
+}
+.btn-copy-code:hover { background: rgba(212,168,67,.25); }
+.fb-code-pre {
+  margin: 0; padding: 12px 14px; overflow-x: auto;
+  font-family: var(--font-mono); font-size: .68rem; color: var(--text2);
+  line-height: 1.6; white-space: pre;
+}
+.fb-embed-bar {
+  display: none; margin-top: 14px; padding: 12px 14px;
+  background: var(--green-dim); border: 1px solid rgba(16,217,138,.25);
+  border-radius: var(--r-md); font-family: var(--font-mono); font-size: .69rem;
+  color: var(--green); align-items: center; justify-content: space-between; gap: 10px;
+  flex-wrap: wrap;
+}
+.fb-embed-bar.visible { display: flex; }
+.btn-fb-embed {
+  background: var(--green); color: #000; border: none; border-radius: var(--r-sm);
+  font-family: var(--font-royal); font-weight: 700; font-size: .64rem;
+  padding: 6px 14px; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  transition: opacity .2s; letter-spacing: .04em;
+}
+.btn-fb-embed:hover { opacity: .85; }
 .btn-db-reload {
-  background: none; border: 1px solid rgba(16,217,138,.3); border-radius: var(--r-sm);
+  background: none; border: 1px solid rgba(16,217,138,.35); border-radius: var(--r-sm);
   color: var(--green); font-family: var(--font-mono); font-size: .62rem;
-  padding: 6px 13px; cursor: pointer; transition: var(--t); white-space: nowrap;
+  padding: 6px 12px; cursor: pointer; transition: var(--t); display: none;
 }
 .btn-db-reload:hover { background: rgba(16,217,138,.1); }
 
@@ -715,17 +798,16 @@ tr.total-row .lbl {
 </header>
 
 <!-- ══ BARRE BASE DE DONNÉES ══ -->
-<div class="db-bar disconnected" id="dbBar">
+<div class="db-bar" id="dbBar">
   <div class="db-status-wrap">
     <div class="db-dot"></div>
-    <div class="db-status-text" id="dbStatusText">Non connecté — cliquez pour charger banderoyale.xlsx</div>
+    <div class="db-status-text" id="dbStatusText">Initialisation…</div>
   </div>
   <div class="db-actions">
-    <button class="btn-db-connect" id="btnDbConnect" onclick="connectDatabase()">📂 Charger banderoyale.xlsx</button>
-    <button class="btn-db-reload" id="btnDbReload" onclick="reloadDatabase()" style="display:none">🔄 Recharger</button>
+    <button class="btn-db-reload" id="btnDbReload" onclick="loadFromSheets(false)" title="Recharger depuis Google Sheets">🔄 Actualiser</button>
+    <button class="btn-db-connect" onclick="openFbConfigModal()">⚙ Configuration</button>
   </div>
 </div>
-<input type="file" id="dbFileInput" accept=".xlsx" style="display:none" onchange="onDbFileInput(this)">
 
 <!-- ══ BARRES INFO ══ -->
 <div class="info-bar session" id="sessionBar">
@@ -837,7 +919,7 @@ tr.total-row .lbl {
       <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
       <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
     </svg>
-    Sauvegarder dans banderoyale.xlsx
+    Sauvegarder dans Google Sheets
   </button>
 
   <!-- Indicateur modifications en attente -->
@@ -856,7 +938,7 @@ tr.total-row .lbl {
   </button>
 
   <div class="export-hint">
-    💾 Les modifications sont sauvegardées dans <strong>banderoyale.xlsx</strong> — partagez ce fichier<br>
+    💾 Sauvegarde dans Google Sheets — visible instantanément par tous les membres<br>
     📊 Exporter génère un rapport Excel formaté pour consultation
   </div>
 </div>
@@ -923,12 +1005,73 @@ tr.total-row .lbl {
   </div>
 </div>
 
+<!-- ══ MODAL CONFIG GOOGLE SHEETS ══ -->
+<div class="modal-overlay" id="fbConfigOverlay" style="z-index:9500">
+  <div class="modal-fb">
+    <img src="logobr.jpeg" class="modal-logo" alt="" onerror="this.style.display='none'">
+    <div class="modal-title">BASE DE DONNÉES</div>
+    <div class="modal-sub">Google Sheets — configuration en 5 minutes</div>
+
+    <div class="fb-steps">
+      <div class="fb-steps-title">Instructions (compte Google suffisant)</div>
+      <div class="fb-step"><div class="fb-step-n">1</div><div>Ouvrez <strong>Google Sheets</strong> → créez une nouvelle feuille vide</div></div>
+      <div class="fb-step"><div class="fb-step-n">2</div><div>Menu <strong>Extensions → Apps Script</strong> → effacez tout le code → collez le code ci-dessous → <strong>Enregistrer</strong></div></div>
+      <div class="fb-step"><div class="fb-step-n">3</div><div>Cliquez <strong>Déployer → Nouveau déploiement</strong> → Type : Application web → Exécuter en tant que : <strong>Moi</strong> → Accès : <strong>Tout le monde</strong> → Déployer → Autoriser</div></div>
+      <div class="fb-step"><div class="fb-step-n">4</div><div>Copiez l'<strong>URL du déploiement</strong> et collez-la ci-dessous puis testez</div></div>
+    </div>
+
+    <div class="fb-code-wrap">
+      <div class="fb-code-head">
+        <span class="fb-code-head-lbl">Code Apps Script à coller dans Google Sheets</span>
+        <button class="btn-copy-code" onclick="copyAppsScript()">📋 Copier le code</button>
+      </div>
+      <pre class="fb-code-pre" id="appsScriptCode">function doGet(e) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName('BandRoyalData');
+    if (!sheet) sheet = ss.insertSheet('BandRoyalData');
+    if (e.parameter.action === 'save') {
+      sheet.getRange(1,1).setValue(e.parameter.data);
+      return ContentService
+        .createTextOutput(JSON.stringify({ok:true}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    var val = sheet.getRange(1,1).getValue();
+    return ContentService
+      .createTextOutput(val || '{"cred":[],"deb":[]}')
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({error:err.message}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}</pre>
+    </div>
+
+    <div class="fb-config-lbl" style="margin-top:14px">URL du déploiement Apps Script</div>
+    <input type="text" id="fbConfigInput"
+      placeholder="https://script.google.com/macros/s/.../exec"
+      style="width:100%;margin-bottom:4px">
+    <div class="fb-error" id="fbConfigError"></div>
+
+    <div class="fb-embed-bar" id="fbEmbedBar">
+      <span>✔ Connecté ! Intégrez l'URL pour que tous les membres se connectent automatiquement.</span>
+      <button class="btn-fb-embed" onclick="embedFbConfig()">💾 Intégrer & Télécharger</button>
+    </div>
+
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="btn-modal-cancel" onclick="closeFbConfigModal()">Fermer</button>
+      <button class="btn-modal-save" id="btnFbTest" onclick="testFbConfig()">🔌 Tester & Connecter</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
-<!-- ██ BASE DE DONNÉES INTÉGRÉE — ne pas modifier manuellement ██ -->
-<script id="datastore">/* @@DATA@@ */
-var INIT_DATA = {"cred":[],"deb":[]};
-/* @@DATA@@ */</script>
+<!-- ██ URL GOOGLE SHEETS — générée automatiquement ██ -->
+<script id="sheetsurlstore">/* @@SHEETSURL@@ */
+var SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzaP22y3xRQ9EMxqLAv7MbVRT9dOjTGrI6SJDut1yYmjvcgKx-9RDXcb5zgpOEo-KYx/exec';
+/* @@SHEETSURL@@ */</script>
 
 <script>
 /* ════════════════════════════════════
@@ -942,10 +1085,8 @@ let isAdmin       = false;
 let pendingAction = null;
 let tries         = parseInt(localStorage.getItem('br_tries') || '0');
 let lockedUntil   = parseInt(localStorage.getItem('br_lock')  || '0');
-/* Données depuis le fichier (source principale) */
-let credEntries   = (INIT_DATA.cred && INIT_DATA.cred.length) ? INIT_DATA.cred : JSON.parse(localStorage.getItem('br_cred') || '[]');
-let debEntries    = (INIT_DATA.deb  && INIT_DATA.deb.length)  ? INIT_DATA.deb  : JSON.parse(localStorage.getItem('br_deb')  || '[]');
-/* Empreinte de l'état sauvegardé pour détecter les modifications */
+let credEntries   = JSON.parse(localStorage.getItem('br_cred') || '[]');
+let debEntries    = JSON.parse(localStorage.getItem('br_deb')  || '[]');
 let _savedStamp   = JSON.stringify({c: credEntries, d: debEntries});
 
 /* ── État modal détails ── */
@@ -983,167 +1124,164 @@ function updateUnsavedBadge() {
 }
 
 /* ════════════════════════════════════
-   BASE DE DONNÉES EXCEL
+   BASE DE DONNÉES GOOGLE SHEETS
 ════════════════════════════════════ */
-let dbFileHandle = null; // FileSystemFileHandle (File System Access API)
+let gsUrl       = '';
+let gsConnected = false;
+let gsPoller    = null;
 
-function setDbStatus(connected, filename) {
-  const bar     = document.getElementById('dbBar');
-  const txt     = document.getElementById('dbStatusText');
-  const btnConn = document.getElementById('btnDbConnect');
-  const btnRel  = document.getElementById('btnDbReload');
-  if (connected) {
-    bar.className = 'db-bar connected';
-    txt.textContent = '✔ Connecté : ' + (filename || 'banderoyale.xlsx');
-    btnConn.textContent = '📂 Changer de fichier';
-    btnRel.style.display = '';
+function setDbStatus(state, detail) {
+  const bar    = document.getElementById('dbBar');
+  const txt    = document.getElementById('dbStatusText');
+  const reload = document.getElementById('btnDbReload');
+  bar.className = 'db-bar';
+  const states = {
+    connecting:   { cls: 'db-warn', msg: '🔄 Connexion à Google Sheets…' },
+    connected:    { cls: 'db-ok',   msg: '✔ Google Sheets connecté — données synchronisées' },
+    unconfigured: { cls: 'db-err',  msg: '⚙ Base de données non configurée — cliquez ⚙ Configuration' },
+    error:        { cls: 'db-err',  msg: '✘ Erreur : ' + (detail || 'connexion impossible') },
+  };
+  const s = states[state] || states.unconfigured;
+  bar.classList.add(s.cls);
+  txt.textContent = s.msg;
+  reload.style.display = (state === 'connected') ? '' : 'none';
+}
+
+function initFirebase() {
+  let url = (typeof SHEETS_URL !== 'undefined' && SHEETS_URL) ? SHEETS_URL : '';
+  if (!url) { try { url = localStorage.getItem('br_sheetsurl') || ''; } catch(e) {} }
+  if (url) {
+    gsUrl = url;
+    loadFromSheets(true);
   } else {
-    bar.className = 'db-bar disconnected';
-    txt.textContent = 'Non connecté — cliquez pour charger banderoyale.xlsx';
-    btnConn.textContent = '📂 Charger banderoyale.xlsx';
-    btnRel.style.display = 'none';
+    setDbStatus('unconfigured');
+    openFbConfigModal();
   }
 }
 
-async function connectDatabase() {
-  if (window.showOpenFilePicker) {
-    try {
-      const [handle] = await window.showOpenFilePicker({
-        types: [{ description: 'Excel', accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] } }],
-        multiple: false
-      });
-      dbFileHandle = handle;
-      const file   = await handle.getFile();
-      const buffer = await file.arrayBuffer();
-      loadFromExcel(buffer, file.name);
-    } catch(e) {
-      if (e.name !== 'AbortError') showToast('⚠ Impossible d\'ouvrir le fichier');
-    }
-  } else {
-    // Navigateurs sans File System Access API : input classique
-    document.getElementById('dbFileInput').click();
-  }
-}
-
-function onDbFileInput(input) {
-  const file = input.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => loadFromExcel(e.target.result, file.name);
-  reader.readAsArrayBuffer(file);
-  input.value = ''; // reset pour permettre de re-sélectionner le même fichier
-}
-
-async function reloadDatabase() {
-  if (!dbFileHandle) { connectDatabase(); return; }
+async function loadFromSheets(isInit) {
+  if (!gsUrl) return;
+  if (isInit) setDbStatus('connecting');
   try {
-    const file   = await dbFileHandle.getFile();
-    const buffer = await file.arrayBuffer();
-    loadFromExcel(buffer, file.name);
-    showToast('🔄 Base de données rechargée');
-  } catch(e) {
-    showToast('⚠ Impossible de relire le fichier');
-  }
-}
-
-function loadFromExcel(buffer, filename) {
-  try {
-    const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
-
-    const readSheet = name => {
-      const ws = wb.Sheets[name]; if (!ws) return [];
-      return XLSX.utils.sheet_to_json(ws, { defval: null });
-    };
-
-    const parseDate = v => {
-      if (!v) return today;
-      if (typeof v === 'string') return v.substring(0, 10);
-      if (v instanceof Date)   return v.toISOString().split('T')[0];
-      if (typeof v === 'number') {
-        const d = new Date((v - 25569) * 86400 * 1000);
-        return d.toISOString().split('T')[0];
-      }
-      return today;
-    };
-
-    const credRows       = readSheet('Créditeur');
-    const credDetailRows = readSheet('Détails_Créditeur');
-    const debRows        = readSheet('Débiteur');
-    const debDetailRows  = readSheet('Détails_Débiteur');
-
-    const buildDetailMap = rows => {
-      const map = {};
-      rows.forEach(r => {
-        const pid = r['ParentID'];
-        if (!map[pid]) map[pid] = [];
-        map[pid].push({ id: r['ID'], nom: String(r['Nom']||''), montant: Number(r['Montant']||0), motif: String(r['Motif']||'—') });
-      });
-      return map;
-    };
-    const credMap = buildDetailMap(credDetailRows);
-    const debMap  = buildDetailMap(debDetailRows);
-
-    credEntries = credRows.map(r => ({
-      id: r['ID'], desc: String(r['Description']||''), date: parseDate(r['Date']), amt: Number(r['Montant']||0),
-      details: credMap[r['ID']] && credMap[r['ID']].length ? credMap[r['ID']] : null
-    }));
-    debEntries = debRows.map(r => ({
-      id: r['ID'], desc: String(r['Description']||''), date: parseDate(r['Date']), amt: Number(r['Montant']||0),
-      details: debMap[r['ID']] && debMap[r['ID']].length ? debMap[r['ID']] : null
-    }));
-
+    const res  = await fetch(gsUrl, { redirect: 'follow' });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    const prev = JSON.stringify({c: credEntries, d: debEntries});
+    credEntries = data.cred || [];
+    debEntries  = data.deb  || [];
     _savedStamp = JSON.stringify({c: credEntries, d: debEntries});
-    save(); render(); updateUnsavedBadge();
-    setDbStatus(true, filename);
-    showToast('✔ Base chargée — ' + (credEntries.length + debEntries.length) + ' opération(s)');
+    localStorage.setItem('br_cred', JSON.stringify(credEntries));
+    localStorage.setItem('br_deb',  JSON.stringify(debEntries));
+    gsConnected = true;
+    setDbStatus('connected');
+    render(); updateUnsavedBadge();
+    if (isInit) {
+      showToast('✔ Données chargées — ' + (credEntries.length + debEntries.length) + ' opération(s)');
+      startPoller();
+    } else if (JSON.stringify({c: credEntries, d: debEntries}) !== prev) {
+      showToast('🔄 Données mises à jour depuis Google Sheets');
+    } else {
+      showToast('✔ Données à jour');
+    }
   } catch(e) {
-    console.error(e);
-    showToast('⚠ Erreur lecture Excel : ' + e.message);
+    gsConnected = false;
+    setDbStatus('error', e.message);
+    if (isInit) showToast('⚠ ' + e.message);
   }
 }
 
-function buildDatabaseWorkbook() {
-  const wb = XLSX.utils.book_new();
-
-  const credRows = [['ID','Description','Date','Montant']];
-  credEntries.forEach(e => credRows.push([e.id, e.desc, e.date, e.amt]));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(credRows), 'Créditeur');
-
-  const credDetRows = [['ParentID','ID','Nom','Montant','Motif']];
-  credEntries.forEach(e => (e.details||[]).forEach(d => credDetRows.push([e.id, d.id, d.nom, d.montant, d.motif])));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(credDetRows), 'Détails_Créditeur');
-
-  const debRows = [['ID','Description','Date','Montant']];
-  debEntries.forEach(e => debRows.push([e.id, e.desc, e.date, e.amt]));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(debRows), 'Débiteur');
-
-  const debDetRows = [['ParentID','ID','Nom','Montant','Motif']];
-  debEntries.forEach(e => (e.details||[]).forEach(d => debDetRows.push([e.id, d.id, d.nom, d.montant, d.motif])));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(debDetRows), 'Détails_Débiteur');
-
-  return wb;
+function startPoller() {
+  if (gsPoller) clearInterval(gsPoller);
+  gsPoller = setInterval(() => loadFromSheets(false), 60000);
 }
 
 async function saveToDatabase() {
   if (!isAdmin) return;
-  const wb = buildDatabaseWorkbook();
-  if (dbFileHandle) {
-    try {
-      const buf      = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-      const writable = await dbFileHandle.createWritable();
-      await writable.write(new Uint8Array(buf));
-      await writable.close();
-      _savedStamp = JSON.stringify({c: credEntries, d: debEntries});
-      updateUnsavedBadge();
-      showToast('💾 Sauvegardé dans banderoyale.xlsx');
-    } catch(e) {
-      showToast('⚠ Écriture impossible — ' + e.message);
-    }
-  } else {
-    XLSX.writeFile(wb, 'banderoyale.xlsx');
+  if (!gsUrl || !gsConnected) { showToast('⚠ Base de données non connectée'); return; }
+  const btn = document.getElementById('btnSaveDb');
+  btn.disabled = true;
+  try {
+    const data = JSON.stringify({cred: credEntries, deb: debEntries});
+    const url  = gsUrl + '?action=save&data=' + encodeURIComponent(data);
+    const res  = await fetch(url, { redirect: 'follow' });
+    const result = await res.json();
+    if (result.error) throw new Error(result.error);
     _savedStamp = JSON.stringify({c: credEntries, d: debEntries});
     updateUnsavedBadge();
-    showToast('💾 banderoyale.xlsx téléchargé — remplacez-le sur le dossier partagé');
+    showToast('💾 Sauvegardé dans Google Sheets');
+  } catch(e) {
+    showToast('⚠ Erreur sauvegarde : ' + e.message);
+    btn.disabled = false;
+    updateUnsavedBadge();
   }
+}
+
+/* ═══ Modal config ═══ */
+function openFbConfigModal() {
+  document.getElementById('fbConfigError').textContent = '';
+  document.getElementById('fbEmbedBar').classList.remove('visible');
+  document.getElementById('fbConfigInput').value = gsUrl || '';
+  const btn = document.getElementById('btnFbTest');
+  btn.disabled = false; btn.textContent = '🔌 Tester & Connecter';
+  document.getElementById('fbConfigOverlay').classList.add('open');
+}
+function closeFbConfigModal() {
+  document.getElementById('fbConfigOverlay').classList.remove('open');
+}
+function copyAppsScript() {
+  const code = document.getElementById('appsScriptCode').textContent;
+  navigator.clipboard.writeText(code.trim())
+    .then(() => showToast('📋 Code copié dans le presse-papier !'))
+    .catch(() => showToast('⚠ Sélectionnez et copiez manuellement'));
+}
+
+async function testFbConfig() {
+  const url   = document.getElementById('fbConfigInput').value.trim();
+  const errEl = document.getElementById('fbConfigError');
+  const btn   = document.getElementById('btnFbTest');
+  errEl.textContent = '';
+  if (!url || !url.startsWith('https://script.google.com')) {
+    errEl.textContent = '⚠ URL invalide — doit commencer par https://script.google.com/macros/s/…';
+    return;
+  }
+  btn.disabled = true; btn.textContent = 'Test en cours…';
+  try {
+    const res  = await fetch(url, { redirect: 'follow' });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    gsUrl = url; gsConnected = true;
+    localStorage.setItem('br_sheetsurl', url);
+    credEntries = data.cred || [];
+    debEntries  = data.deb  || [];
+    _savedStamp = JSON.stringify({c: credEntries, d: debEntries});
+    localStorage.setItem('br_cred', JSON.stringify(credEntries));
+    localStorage.setItem('br_deb',  JSON.stringify(debEntries));
+    render(); updateUnsavedBadge();
+    setDbStatus('connected');
+    startPoller();
+    document.getElementById('fbEmbedBar').classList.add('visible');
+    btn.textContent = '✔ Connecté !';
+    showToast('✔ Google Sheets connecté !');
+  } catch(e) {
+    errEl.textContent = '⚠ ' + e.message;
+    btn.disabled = false; btn.textContent = '🔌 Tester & Connecter';
+  }
+}
+
+function embedFbConfig() {
+  if (!gsUrl) return;
+  let html = document.documentElement.outerHTML;
+  html = html.replace(
+    /\/\* @@SHEETSURL@@ \*\/[\s\S]*?\/\* @@SHEETSURL@@ \*\//,
+    '/* @@SHEETSURL@@ */\nvar SHEETS_URL = ' + JSON.stringify(gsUrl) + ';\n/* @@SHEETSURL@@ */'
+  );
+  const blob = new Blob([html], {type: 'text/html;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a'); a.href = url; a.download = 'index.html';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast('✔ index.html généré — partagez ce fichier avec tous les membres');
+  closeFbConfigModal();
 }
 
 /* ════════════════════════════════════
@@ -1155,9 +1293,9 @@ document.getElementById('cDate').value = today;
 document.getElementById('dDate').value = today;
 document.getElementById('lockCta').classList.add('visible');
 applyTheme();
-setDbStatus(false);
 render();
 updateUnsavedBadge();
+initFirebase();
 
 /* ════════════════════════════════════
    THÈME
