@@ -1032,19 +1032,19 @@ tr.total-row .lbl {
     if (!sheet) sheet = ss.insertSheet('BandRoyalData');
     if (e.parameter.action === 'save') {
       sheet.getRange(1,1).setValue(e.parameter.data);
-      return ContentService
-        .createTextOutput(JSON.stringify({ok:true}))
-        .setMimeType(ContentService.MimeType.JSON);
+      return respond(e, JSON.stringify({ok:true}));
     }
     var val = sheet.getRange(1,1).getValue();
-    return ContentService
-      .createTextOutput(val || '{"cred":[],"deb":[]}')
-      .setMimeType(ContentService.MimeType.JSON);
+    return respond(e, val || '{"cred":[],"deb":[]}');
   } catch(err) {
-    return ContentService
-      .createTextOutput(JSON.stringify({error:err.message}))
-      .setMimeType(ContentService.MimeType.JSON);
+    return respond(e, JSON.stringify({error:err.message}));
   }
+}
+function respond(e, text) {
+  var cb = e.parameter.callback;
+  return cb
+    ? ContentService.createTextOutput(cb+'('+text+')').setMimeType(ContentService.MimeType.JAVASCRIPT)
+    : ContentService.createTextOutput(text).setMimeType(ContentService.MimeType.JSON);
 }</pre>
     </div>
 
@@ -1124,7 +1124,7 @@ function updateUnsavedBadge() {
 }
 
 /* ════════════════════════════════════
-   BASE DE DONNÉES GOOGLE SHEETS
+   BASE DE DONNÉES GOOGLE SHEETS (JSONP)
 ════════════════════════════════════ */
 let gsUrl       = '';
 let gsConnected = false;
@@ -1147,6 +1147,32 @@ function setDbStatus(state, detail) {
   reload.style.display = (state === 'connected') ? '' : 'none';
 }
 
+/* ── JSONP : contourne CORS sans configuration serveur ── */
+function gsCall(params) {
+  return new Promise((resolve, reject) => {
+    const cbName = '_br' + Date.now();
+    const qs = Object.entries(params)
+      .map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v))
+      .join('&');
+    const s = document.createElement('script');
+    const cleanup = () => {
+      try { document.head.removeChild(s); } catch(e) {}
+      delete window[cbName];
+    };
+    const timer = setTimeout(() => {
+      cleanup();
+      reject(new Error('Délai dépassé — vérifiez l\'URL et le déploiement'));
+    }, 15000);
+    s.onerror = () => {
+      clearTimeout(timer); cleanup();
+      reject(new Error('URL inaccessible — vérifiez que le déploiement est bien "Tout le monde"'));
+    };
+    window[cbName] = data => { clearTimeout(timer); cleanup(); resolve(data); };
+    s.src = gsUrl + '?' + qs + '&callback=' + cbName;
+    document.head.appendChild(s);
+  });
+}
+
 function initFirebase() {
   let url = (typeof SHEETS_URL !== 'undefined' && SHEETS_URL) ? SHEETS_URL : '';
   if (!url) { try { url = localStorage.getItem('br_sheetsurl') || ''; } catch(e) {} }
@@ -1163,10 +1189,9 @@ async function loadFromSheets(isInit) {
   if (!gsUrl) return;
   if (isInit) setDbStatus('connecting');
   try {
-    const res  = await fetch(gsUrl, { redirect: 'follow' });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error);
     const prev = JSON.stringify({c: credEntries, d: debEntries});
+    const data = await gsCall({});
+    if (data.error) throw new Error(data.error);
     credEntries = data.cred || [];
     debEntries  = data.deb  || [];
     _savedStamp = JSON.stringify({c: credEntries, d: debEntries});
@@ -1201,17 +1226,14 @@ async function saveToDatabase() {
   const btn = document.getElementById('btnSaveDb');
   btn.disabled = true;
   try {
-    const data = JSON.stringify({cred: credEntries, deb: debEntries});
-    const url  = gsUrl + '?action=save&data=' + encodeURIComponent(data);
-    const res  = await fetch(url, { redirect: 'follow' });
-    const result = await res.json();
+    const data   = JSON.stringify({cred: credEntries, deb: debEntries});
+    const result = await gsCall({action: 'save', data});
     if (result.error) throw new Error(result.error);
     _savedStamp = JSON.stringify({c: credEntries, d: debEntries});
     updateUnsavedBadge();
     showToast('💾 Sauvegardé dans Google Sheets');
   } catch(e) {
     showToast('⚠ Erreur sauvegarde : ' + e.message);
-    btn.disabled = false;
     updateUnsavedBadge();
   }
 }
@@ -1245,11 +1267,12 @@ async function testFbConfig() {
     return;
   }
   btn.disabled = true; btn.textContent = 'Test en cours…';
+  const prevUrl = gsUrl;
+  gsUrl = url;
   try {
-    const res  = await fetch(url, { redirect: 'follow' });
-    const data = await res.json();
+    const data = await gsCall({});
     if (data.error) throw new Error(data.error);
-    gsUrl = url; gsConnected = true;
+    gsConnected = true;
     localStorage.setItem('br_sheetsurl', url);
     credEntries = data.cred || [];
     debEntries  = data.deb  || [];
@@ -1263,6 +1286,7 @@ async function testFbConfig() {
     btn.textContent = '✔ Connecté !';
     showToast('✔ Google Sheets connecté !');
   } catch(e) {
+    gsUrl = prevUrl;
     errEl.textContent = '⚠ ' + e.message;
     btn.disabled = false; btn.textContent = '🔌 Tester & Connecter';
   }
