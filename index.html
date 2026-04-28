@@ -172,6 +172,40 @@ header {
 .btn-unlock:hover { opacity: .85; }
 
 /* ══════════════════════════════════════════════════
+   BARRE BASE DE DONNÉES
+══════════════════════════════════════════════════ */
+.db-bar {
+  margin: 10px 40px 0; border-radius: var(--r-md);
+  padding: 10px 18px; display: flex;
+  align-items: center; justify-content: space-between; gap: 14px;
+  border: 1px solid var(--border); background: var(--card2);
+  transition: border-color .3s, background .3s;
+}
+.db-bar.connected { border-color: rgba(16,217,138,.3); background: var(--green-dim); }
+.db-bar.disconnected { border-color: rgba(244,63,94,.2); background: var(--red-dim); }
+.db-status-wrap { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.db-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.db-bar.connected .db-dot { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
+.db-bar.disconnected .db-dot { background: var(--red); }
+.db-status-text { font-family: var(--font-mono); font-size: .67rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.db-bar.connected .db-status-text { color: var(--green); }
+.db-bar.disconnected .db-status-text { color: var(--text2); }
+.db-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.btn-db-connect {
+  background: var(--gold); color: #000; border: none; border-radius: var(--r-sm);
+  font-family: var(--font-royal); font-weight: 700; font-size: .68rem;
+  padding: 7px 16px; cursor: pointer; letter-spacing: .05em;
+  transition: opacity .2s; white-space: nowrap;
+}
+.btn-db-connect:hover { opacity: .85; }
+.btn-db-reload {
+  background: none; border: 1px solid rgba(16,217,138,.3); border-radius: var(--r-sm);
+  color: var(--green); font-family: var(--font-mono); font-size: .62rem;
+  padding: 6px 13px; cursor: pointer; transition: var(--t); white-space: nowrap;
+}
+.btn-db-reload:hover { background: rgba(16,217,138,.1); }
+
+/* ══════════════════════════════════════════════════
    STATS BANNER
 ══════════════════════════════════════════════════ */
 .stats-grid {
@@ -640,12 +674,12 @@ tr.total-row .lbl {
 ══════════════════════════════════════════════════ */
 @media (max-width: 1024px) {
   header, .stats-grid, .panels-grid, .bottom-bar,
-  .info-bar { margin-left: 20px; margin-right: 20px; }
+  .info-bar, .db-bar { margin-left: 20px; margin-right: 20px; }
   header { padding: 0 20px; }
 }
 @media (max-width: 768px) {
   header, .stats-grid, .panels-grid, .bottom-bar,
-  .info-bar { margin-left: 14px; margin-right: 14px; }
+  .info-bar, .db-bar { margin-left: 14px; margin-right: 14px; }
   header { padding: 0 14px; height: 58px; }
   .header-date { display: none; }
   .stats-grid  { grid-template-columns: 1fr; gap: 10px; }
@@ -679,6 +713,19 @@ tr.total-row .lbl {
     <div class="mode-badge view" id="modeBadge">👁 Consultation</div>
   </div>
 </header>
+
+<!-- ══ BARRE BASE DE DONNÉES ══ -->
+<div class="db-bar disconnected" id="dbBar">
+  <div class="db-status-wrap">
+    <div class="db-dot"></div>
+    <div class="db-status-text" id="dbStatusText">Non connecté — cliquez pour charger banderoyale.xlsx</div>
+  </div>
+  <div class="db-actions">
+    <button class="btn-db-connect" id="btnDbConnect" onclick="connectDatabase()">📂 Charger banderoyale.xlsx</button>
+    <button class="btn-db-reload" id="btnDbReload" onclick="reloadDatabase()" style="display:none">🔄 Recharger</button>
+  </div>
+</div>
+<input type="file" id="dbFileInput" accept=".xlsx" style="display:none" onchange="onDbFileInput(this)">
 
 <!-- ══ BARRES INFO ══ -->
 <div class="info-bar session" id="sessionBar">
@@ -784,13 +831,13 @@ tr.total-row .lbl {
 <!-- ══ EXPORT & SAUVEGARDE ══ -->
 <div class="bottom-bar">
 
-  <!-- Bouton Sauvegarder (partage) -->
-  <button class="btn-save" id="btnSaveFile" onclick="saveToFile()" disabled>
+  <!-- Bouton Sauvegarder dans Excel -->
+  <button class="btn-save" id="btnSaveDb" onclick="saveToDatabase()" disabled>
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
       <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
     </svg>
-    Sauvegarder le fichier
+    Sauvegarder dans banderoyale.xlsx
   </button>
 
   <!-- Indicateur modifications en attente -->
@@ -809,8 +856,8 @@ tr.total-row .lbl {
   </button>
 
   <div class="export-hint">
-    💾 Sauvegarder génère un nouveau <strong>index.html</strong> à remplacer sur le dossier partagé<br>
-    📊 Excel pour consultation uniquement
+    💾 Les modifications sont sauvegardées dans <strong>banderoyale.xlsx</strong> — partagez ce fichier<br>
+    📊 Exporter génère un rapport Excel formaté pour consultation
   </div>
 </div>
 
@@ -923,36 +970,180 @@ function save() {
 }
 
 function updateUnsavedBadge() {
-  const stamp  = JSON.stringify({c: credEntries, d: debEntries});
+  const stamp   = JSON.stringify({c: credEntries, d: debEntries});
   const changed = stamp !== _savedStamp;
   const badge   = document.getElementById('unsavedBadge');
-  const btn     = document.getElementById('btnSaveFile');
+  const btn     = document.getElementById('btnSaveDb');
   if (!badge || !btn) return;
   badge.classList.toggle('visible', changed);
-  const n = credEntries.length + debEntries.length;
+  const n      = credEntries.length + debEntries.length;
   const nSaved = (JSON.parse(_savedStamp||'{}').c||[]).length + (JSON.parse(_savedStamp||'{}').d||[]).length;
   badge.querySelector('span').textContent = Math.abs(n - nSaved) + ' modification(s) non sauvegardée(s)';
   btn.disabled = !isAdmin || !changed;
 }
 
-function saveToFile() {
+/* ════════════════════════════════════
+   BASE DE DONNÉES EXCEL
+════════════════════════════════════ */
+let dbFileHandle = null; // FileSystemFileHandle (File System Access API)
+
+function setDbStatus(connected, filename) {
+  const bar     = document.getElementById('dbBar');
+  const txt     = document.getElementById('dbStatusText');
+  const btnConn = document.getElementById('btnDbConnect');
+  const btnRel  = document.getElementById('btnDbReload');
+  if (connected) {
+    bar.className = 'db-bar connected';
+    txt.textContent = '✔ Connecté : ' + (filename || 'banderoyale.xlsx');
+    btnConn.textContent = '📂 Changer de fichier';
+    btnRel.style.display = '';
+  } else {
+    bar.className = 'db-bar disconnected';
+    txt.textContent = 'Non connecté — cliquez pour charger banderoyale.xlsx';
+    btnConn.textContent = '📂 Charger banderoyale.xlsx';
+    btnRel.style.display = 'none';
+  }
+}
+
+async function connectDatabase() {
+  if (window.showOpenFilePicker) {
+    try {
+      const [handle] = await window.showOpenFilePicker({
+        types: [{ description: 'Excel', accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] } }],
+        multiple: false
+      });
+      dbFileHandle = handle;
+      const file   = await handle.getFile();
+      const buffer = await file.arrayBuffer();
+      loadFromExcel(buffer, file.name);
+    } catch(e) {
+      if (e.name !== 'AbortError') showToast('⚠ Impossible d\'ouvrir le fichier');
+    }
+  } else {
+    // Navigateurs sans File System Access API : input classique
+    document.getElementById('dbFileInput').click();
+  }
+}
+
+function onDbFileInput(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => loadFromExcel(e.target.result, file.name);
+  reader.readAsArrayBuffer(file);
+  input.value = ''; // reset pour permettre de re-sélectionner le même fichier
+}
+
+async function reloadDatabase() {
+  if (!dbFileHandle) { connectDatabase(); return; }
+  try {
+    const file   = await dbFileHandle.getFile();
+    const buffer = await file.arrayBuffer();
+    loadFromExcel(buffer, file.name);
+    showToast('🔄 Base de données rechargée');
+  } catch(e) {
+    showToast('⚠ Impossible de relire le fichier');
+  }
+}
+
+function loadFromExcel(buffer, filename) {
+  try {
+    const wb = XLSX.read(buffer, { type: 'array', cellDates: true });
+
+    const readSheet = name => {
+      const ws = wb.Sheets[name]; if (!ws) return [];
+      return XLSX.utils.sheet_to_json(ws, { defval: null });
+    };
+
+    const parseDate = v => {
+      if (!v) return today;
+      if (typeof v === 'string') return v.substring(0, 10);
+      if (v instanceof Date)   return v.toISOString().split('T')[0];
+      if (typeof v === 'number') {
+        const d = new Date((v - 25569) * 86400 * 1000);
+        return d.toISOString().split('T')[0];
+      }
+      return today;
+    };
+
+    const credRows       = readSheet('Créditeur');
+    const credDetailRows = readSheet('Détails_Créditeur');
+    const debRows        = readSheet('Débiteur');
+    const debDetailRows  = readSheet('Détails_Débiteur');
+
+    const buildDetailMap = rows => {
+      const map = {};
+      rows.forEach(r => {
+        const pid = r['ParentID'];
+        if (!map[pid]) map[pid] = [];
+        map[pid].push({ id: r['ID'], nom: String(r['Nom']||''), montant: Number(r['Montant']||0), motif: String(r['Motif']||'—') });
+      });
+      return map;
+    };
+    const credMap = buildDetailMap(credDetailRows);
+    const debMap  = buildDetailMap(debDetailRows);
+
+    credEntries = credRows.map(r => ({
+      id: r['ID'], desc: String(r['Description']||''), date: parseDate(r['Date']), amt: Number(r['Montant']||0),
+      details: credMap[r['ID']] && credMap[r['ID']].length ? credMap[r['ID']] : null
+    }));
+    debEntries = debRows.map(r => ({
+      id: r['ID'], desc: String(r['Description']||''), date: parseDate(r['Date']), amt: Number(r['Montant']||0),
+      details: debMap[r['ID']] && debMap[r['ID']].length ? debMap[r['ID']] : null
+    }));
+
+    _savedStamp = JSON.stringify({c: credEntries, d: debEntries});
+    save(); render(); updateUnsavedBadge();
+    setDbStatus(true, filename);
+    showToast('✔ Base chargée — ' + (credEntries.length + debEntries.length) + ' opération(s)');
+  } catch(e) {
+    console.error(e);
+    showToast('⚠ Erreur lecture Excel : ' + e.message);
+  }
+}
+
+function buildDatabaseWorkbook() {
+  const wb = XLSX.utils.book_new();
+
+  const credRows = [['ID','Description','Date','Montant']];
+  credEntries.forEach(e => credRows.push([e.id, e.desc, e.date, e.amt]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(credRows), 'Créditeur');
+
+  const credDetRows = [['ParentID','ID','Nom','Montant','Motif']];
+  credEntries.forEach(e => (e.details||[]).forEach(d => credDetRows.push([e.id, d.id, d.nom, d.montant, d.motif])));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(credDetRows), 'Détails_Créditeur');
+
+  const debRows = [['ID','Description','Date','Montant']];
+  debEntries.forEach(e => debRows.push([e.id, e.desc, e.date, e.amt]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(debRows), 'Débiteur');
+
+  const debDetRows = [['ParentID','ID','Nom','Montant','Motif']];
+  debEntries.forEach(e => (e.details||[]).forEach(d => debDetRows.push([e.id, d.id, d.nom, d.montant, d.motif])));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(debDetRows), 'Détails_Débiteur');
+
+  return wb;
+}
+
+async function saveToDatabase() {
   if (!isAdmin) return;
-  const data    = JSON.stringify({cred: credEntries, deb: debEntries});
-  let   html    = document.documentElement.outerHTML;
-  /* Remplace le bloc @@DATA@@ avec les données actuelles */
-  html = html.replace(
-    /\/\* @@DATA@@ \*\/[\s\S]*?\/\* @@DATA@@ \*\//,
-    '/* @@DATA@@ */\nvar INIT_DATA = ' + data + ';\n/* @@DATA@@ */'
-  );
-  const blob = new Blob([html], {type: 'text/html;charset=utf-8'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url; a.download = 'index.html';
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a); URL.revokeObjectURL(url);
-  _savedStamp = JSON.stringify({c: credEntries, d: debEntries});
-  updateUnsavedBadge();
-  showToast('💾 Fichier généré — remplacez index.html sur le dossier partagé !');
+  const wb = buildDatabaseWorkbook();
+  if (dbFileHandle) {
+    try {
+      const buf      = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const writable = await dbFileHandle.createWritable();
+      await writable.write(new Uint8Array(buf));
+      await writable.close();
+      _savedStamp = JSON.stringify({c: credEntries, d: debEntries});
+      updateUnsavedBadge();
+      showToast('💾 Sauvegardé dans banderoyale.xlsx');
+    } catch(e) {
+      showToast('⚠ Écriture impossible — ' + e.message);
+    }
+  } else {
+    XLSX.writeFile(wb, 'banderoyale.xlsx');
+    _savedStamp = JSON.stringify({c: credEntries, d: debEntries});
+    updateUnsavedBadge();
+    showToast('💾 banderoyale.xlsx téléchargé — remplacez-le sur le dossier partagé');
+  }
 }
 
 /* ════════════════════════════════════
@@ -964,6 +1155,7 @@ document.getElementById('cDate').value = today;
 document.getElementById('dDate').value = today;
 document.getElementById('lockCta').classList.add('visible');
 applyTheme();
+setDbStatus(false);
 render();
 updateUnsavedBadge();
 
