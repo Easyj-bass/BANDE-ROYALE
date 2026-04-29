@@ -6,6 +6,7 @@
 <title>BAND ROYAL — Journal Financier</title>
 <link rel="icon" type="image/jpeg" href="logobr.jpeg">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 
@@ -141,6 +142,17 @@ header {
   border-color: var(--gold-dim); color: var(--gold);
   background: var(--gold-glow);
 }
+
+/* ── Navigation ── */
+.main-nav { display: flex; gap: 4px; }
+.nav-link {
+  font-family: var(--font-mono); font-size: .7rem; text-decoration: none;
+  padding: 7px 16px; border-radius: 20px;
+  border: 1px solid var(--border); color: var(--muted);
+  transition: var(--t); letter-spacing: .06em;
+}
+.nav-link:hover  { border-color: var(--gold-dim); color: var(--gold); background: var(--gold-glow); }
+.nav-link.active { border-color: var(--gold-dim); color: var(--gold); background: var(--gold-glow); }
 
 /* ══════════════════════════════════════════════════
    BARRES INFO (session / lock)
@@ -790,6 +802,10 @@ tr.total-row .lbl {
       <div class="logo-sub">Journal · Financier</div>
     </div>
   </div>
+  <nav class="main-nav">
+    <a href="index.html" class="nav-link active">💰 Finance</a>
+    <a href="programme.html" class="nav-link">📅 Programme</a>
+  </nav>
   <div class="header-right">
     <div class="header-date" id="dateDisplay"></div>
     <button class="btn-theme" id="themeToggle" onclick="toggleTheme()" title="Mode jour / nuit">🌙</button>
@@ -804,8 +820,7 @@ tr.total-row .lbl {
     <div class="db-status-text" id="dbStatusText">Initialisation…</div>
   </div>
   <div class="db-actions">
-    <button class="btn-db-reload" id="btnDbReload" onclick="loadFromSheets(false)" title="Recharger depuis Google Sheets">🔄 Actualiser</button>
-    <button class="btn-db-connect" onclick="openFbConfigModal()">⚙ Configuration</button>
+    <button class="btn-db-reload" id="btnDbReload" onclick="loadFromDB()" title="Recharger depuis MySQL">🔄 Actualiser</button>
   </div>
 </div>
 
@@ -913,20 +928,14 @@ tr.total-row .lbl {
 <!-- ══ EXPORT & SAUVEGARDE ══ -->
 <div class="bottom-bar">
 
-  <!-- Bouton Sauvegarder dans Excel -->
-  <button class="btn-save" id="btnSaveDb" onclick="saveToDatabase()" disabled>
+  <!-- Bouton Recharger depuis la DB -->
+  <button class="btn-save" id="btnReloadDb" onclick="loadFromDB()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-      <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+      <polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/>
+      <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
     </svg>
-    Sauvegarder dans Google Sheets
+    Recharger les données
   </button>
-
-  <!-- Indicateur modifications en attente -->
-  <div class="unsaved-badge" id="unsavedBadge">
-    <div class="unsaved-dot"></div>
-    <span>0 modification(s) non sauvegardée(s)</span>
-  </div>
 
   <!-- Bouton Excel -->
   <button class="btn-export" onclick="exportExcel()">
@@ -938,8 +947,8 @@ tr.total-row .lbl {
   </button>
 
   <div class="export-hint">
-    💾 Sauvegarde dans Google Sheets — visible instantanément par tous les membres<br>
-    📊 Exporter génère un rapport Excel formaté pour consultation
+    💾 Toutes les opérations sont sauvegardées automatiquement dans Supabase<br>
+    📊 Exporter génère un rapport Excel formaté — 📅 <a href="programme.html" style="color:var(--gold);text-decoration:none">Voir le Programme</a>
   </div>
 </div>
 
@@ -1005,74 +1014,10 @@ tr.total-row .lbl {
   </div>
 </div>
 
-<!-- ══ MODAL CONFIG GOOGLE SHEETS ══ -->
-<div class="modal-overlay" id="fbConfigOverlay" style="z-index:9500">
-  <div class="modal-fb">
-    <img src="logobr.jpeg" class="modal-logo" alt="" onerror="this.style.display='none'">
-    <div class="modal-title">BASE DE DONNÉES</div>
-    <div class="modal-sub">Google Sheets — configuration en 5 minutes</div>
-
-    <div class="fb-steps">
-      <div class="fb-steps-title">Instructions (compte Google suffisant)</div>
-      <div class="fb-step"><div class="fb-step-n">1</div><div>Ouvrez <strong>Google Sheets</strong> → créez une nouvelle feuille vide</div></div>
-      <div class="fb-step"><div class="fb-step-n">2</div><div>Menu <strong>Extensions → Apps Script</strong> → effacez tout le code → collez le code ci-dessous → <strong>Enregistrer</strong></div></div>
-      <div class="fb-step"><div class="fb-step-n">3</div><div>Cliquez <strong>Déployer → Nouveau déploiement</strong> → Type : Application web → Exécuter en tant que : <strong>Moi</strong> → Accès : <strong>Tout le monde</strong> → Déployer → Autoriser</div></div>
-      <div class="fb-step"><div class="fb-step-n">4</div><div>Copiez l'<strong>URL du déploiement</strong> et collez-la ci-dessous puis testez</div></div>
-    </div>
-
-    <div class="fb-code-wrap">
-      <div class="fb-code-head">
-        <span class="fb-code-head-lbl">Code Apps Script à coller dans Google Sheets</span>
-        <button class="btn-copy-code" onclick="copyAppsScript()">📋 Copier le code</button>
-      </div>
-      <pre class="fb-code-pre" id="appsScriptCode">function doGet(e) {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName('BandRoyalData');
-    if (!sheet) sheet = ss.insertSheet('BandRoyalData');
-    if (e.parameter.action === 'save') {
-      sheet.getRange(1,1).setValue(e.parameter.data);
-      return respond(e, JSON.stringify({ok:true}));
-    }
-    var val = sheet.getRange(1,1).getValue();
-    return respond(e, val || '{"cred":[],"deb":[]}');
-  } catch(err) {
-    return respond(e, JSON.stringify({error:err.message}));
-  }
-}
-function respond(e, text) {
-  var cb = e.parameter.callback;
-  return cb
-    ? ContentService.createTextOutput(cb+'('+text+')').setMimeType(ContentService.MimeType.JAVASCRIPT)
-    : ContentService.createTextOutput(text).setMimeType(ContentService.MimeType.JSON);
-}</pre>
-    </div>
-
-    <div class="fb-config-lbl" style="margin-top:14px">URL du déploiement Apps Script</div>
-    <input type="text" id="fbConfigInput"
-      placeholder="https://script.google.com/macros/s/.../exec"
-      style="width:100%;margin-bottom:4px">
-    <div class="fb-error" id="fbConfigError"></div>
-
-    <div class="fb-embed-bar" id="fbEmbedBar">
-      <span>✔ Connecté ! Intégrez l'URL pour que tous les membres se connectent automatiquement.</span>
-      <button class="btn-fb-embed" onclick="embedFbConfig()">💾 Intégrer & Télécharger</button>
-    </div>
-
-    <div class="modal-actions" style="margin-top:16px">
-      <button class="btn-modal-cancel" onclick="closeFbConfigModal()">Fermer</button>
-      <button class="btn-modal-save" id="btnFbTest" onclick="testFbConfig()">🔌 Tester & Connecter</button>
-    </div>
-  </div>
-</div>
 
 <div id="toast"></div>
 
-<!-- ██ URL GOOGLE SHEETS — générée automatiquement ██ -->
-<script id="sheetsurlstore">/* @@SHEETSURL@@ */
-var SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyoQjGup51eggYTyGhV3T07JphRh6eb4OAB32TeXRY_oGmODYqyJ8GgDPMZWRTjXlgW/exec';
-/* @@SHEETSURL@@ */</script>
-
+<script src="supabase-client.js"></script>
 <script>
 /* ════════════════════════════════════
    MOT DE PASSE
@@ -1085,9 +1030,8 @@ let isAdmin       = false;
 let pendingAction = null;
 let tries         = parseInt(localStorage.getItem('br_tries') || '0');
 let lockedUntil   = parseInt(localStorage.getItem('br_lock')  || '0');
-let credEntries   = JSON.parse(localStorage.getItem('br_cred') || '[]');
-let debEntries    = JSON.parse(localStorage.getItem('br_deb')  || '[]');
-let _savedStamp   = JSON.stringify({c: credEntries, d: debEntries});
+let credEntries   = [];
+let debEntries    = [];
 
 /* ── État modal détails ── */
 let tempDetails     = [];
@@ -1104,209 +1048,63 @@ const fmt     = n => new Intl.NumberFormat('fr-FR').format(Math.round(n)) + ' FC
 const fmtDate = d => d ? new Date(d+'T00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : '—';
 const escHtml = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-function save() {
-  localStorage.setItem('br_cred', JSON.stringify(credEntries));
-  localStorage.setItem('br_deb',  JSON.stringify(debEntries));
-  updateUnsavedBadge();
-}
-
-function updateUnsavedBadge() {
-  const stamp   = JSON.stringify({c: credEntries, d: debEntries});
-  const changed = stamp !== _savedStamp;
-  const badge   = document.getElementById('unsavedBadge');
-  const btn     = document.getElementById('btnSaveDb');
-  if (!badge || !btn) return;
-  badge.classList.toggle('visible', changed);
-  const n      = credEntries.length + debEntries.length;
-  const nSaved = (JSON.parse(_savedStamp||'{}').c||[]).length + (JSON.parse(_savedStamp||'{}').d||[]).length;
-  badge.querySelector('span').textContent = Math.abs(n - nSaved) + ' modification(s) non sauvegardée(s)';
-  btn.disabled = !isAdmin || !changed;
-}
-
 /* ════════════════════════════════════
-   BASE DE DONNÉES GOOGLE SHEETS (JSONP)
+   API SUPABASE
 ════════════════════════════════════ */
-let gsUrl       = '';
-let gsConnected = false;
-let gsPoller    = null;
+async function apiCall(action, data = {}) {
+  switch (action) {
+    case 'add_transaction': {
+      const id = await dbAddTransaction(data.type, data.desc, data.date, data.amt, data.details || []);
+      return { ok: true, id };
+    }
+    case 'edit_transaction': {
+      await dbEditTransaction(data.id, data.desc, data.date, data.amt, data.details || []);
+      return { ok: true };
+    }
+    case 'delete_transaction': {
+      await dbDeleteTransaction(data.id);
+      return { ok: true };
+    }
+    default:
+      throw new Error('Action inconnue : ' + action);
+  }
+}
 
 function setDbStatus(state, detail) {
   const bar    = document.getElementById('dbBar');
   const txt    = document.getElementById('dbStatusText');
   const reload = document.getElementById('btnDbReload');
   bar.className = 'db-bar';
-  const states = {
-    connecting:   { cls: 'db-warn', msg: '🔄 Connexion à Google Sheets…' },
-    connected:    { cls: 'db-ok',   msg: '✔ Google Sheets connecté — données synchronisées' },
-    unconfigured: { cls: 'db-err',  msg: '⚙ Base de données non configurée — cliquez ⚙ Configuration' },
-    error:        { cls: 'db-err',  msg: '✘ Erreur : ' + (detail || 'connexion impossible') },
+  const map = {
+    connecting: { cls: 'db-warn', msg: '🔄 Connexion à Supabase…' },
+    connected:  { cls: 'db-ok',   msg: '✔ Supabase connecté — données synchronisées' },
+    error:      { cls: 'db-err',  msg: '✘ ' + (detail || 'Erreur Supabase — vérifiez supabase-client.js') },
   };
-  const s = states[state] || states.unconfigured;
+  const s = map[state] || map.error;
   bar.classList.add(s.cls);
   txt.textContent = s.msg;
   reload.style.display = (state === 'connected') ? '' : 'none';
 }
 
-/* ── JSONP : contourne CORS sans configuration serveur ── */
-function gsCall(params) {
-  return new Promise((resolve, reject) => {
-    const cbName = '_br' + Date.now();
-    const qs = Object.entries(params)
-      .map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v))
-      .join('&');
-    const s = document.createElement('script');
-    const cleanup = () => {
-      try { document.head.removeChild(s); } catch(e) {}
-      delete window[cbName];
-    };
-    const timer = setTimeout(() => {
-      cleanup();
-      reject(new Error('Délai dépassé — vérifiez l\'URL et le déploiement'));
-    }, 15000);
-    s.onerror = () => {
-      clearTimeout(timer); cleanup();
-      reject(new Error('URL inaccessible — vérifiez que le déploiement est bien "Tout le monde"'));
-    };
-    window[cbName] = data => { clearTimeout(timer); cleanup(); resolve(data); };
-    s.src = gsUrl + '?' + qs + '&callback=' + cbName;
-    document.head.appendChild(s);
-  });
-}
-
-function initFirebase() {
-  let url = (typeof SHEETS_URL !== 'undefined' && SHEETS_URL) ? SHEETS_URL : '';
-  if (!url) { try { url = localStorage.getItem('br_sheetsurl') || ''; } catch(e) {} }
-  if (url) {
-    gsUrl = url;
-    loadFromSheets(true);
-  } else {
-    setDbStatus('unconfigured');
-    openFbConfigModal();
-  }
-}
-
-async function loadFromSheets(isInit) {
-  if (!gsUrl) return;
-  if (isInit) setDbStatus('connecting');
+async function loadFromDB() {
+  setDbStatus('connecting');
   try {
-    const prev = JSON.stringify({c: credEntries, d: debEntries});
-    const data = await gsCall({});
-    if (data.error) throw new Error(data.error);
-    credEntries = data.cred || [];
-    debEntries  = data.deb  || [];
-    _savedStamp = JSON.stringify({c: credEntries, d: debEntries});
-    localStorage.setItem('br_cred', JSON.stringify(credEntries));
-    localStorage.setItem('br_deb',  JSON.stringify(debEntries));
-    gsConnected = true;
+    const data = await dbGetFinance();
+    credEntries = data.cred;
+    debEntries  = data.deb;
     setDbStatus('connected');
-    render(); updateUnsavedBadge();
-    if (isInit) {
-      showToast('✔ Données chargées — ' + (credEntries.length + debEntries.length) + ' opération(s)');
-      startPoller();
-    } else if (JSON.stringify({c: credEntries, d: debEntries}) !== prev) {
-      showToast('🔄 Données mises à jour depuis Google Sheets');
-    } else {
-      showToast('✔ Données à jour');
-    }
+    render();
+    showToast('✔ ' + (credEntries.length + debEntries.length) + ' opération(s) chargée(s)');
   } catch(e) {
-    gsConnected = false;
     setDbStatus('error', e.message);
-    if (isInit) showToast('⚠ ' + e.message);
+    showToast('⚠ ' + e.message);
   }
 }
 
-function startPoller() {
-  if (gsPoller) clearInterval(gsPoller);
-  gsPoller = setInterval(() => loadFromSheets(false), 60000);
+async function initDB() {
+  await loadFromDB();
 }
 
-async function saveToDatabase() {
-  if (!isAdmin) return;
-  if (!gsUrl || !gsConnected) { showToast('⚠ Base de données non connectée'); return; }
-  const btn = document.getElementById('btnSaveDb');
-  btn.disabled = true;
-  try {
-    const data   = JSON.stringify({cred: credEntries, deb: debEntries});
-    const result = await gsCall({action: 'save', data});
-    if (result.error) throw new Error(result.error);
-    _savedStamp = JSON.stringify({c: credEntries, d: debEntries});
-    updateUnsavedBadge();
-    showToast('💾 Sauvegardé dans Google Sheets');
-  } catch(e) {
-    showToast('⚠ Erreur sauvegarde : ' + e.message);
-    updateUnsavedBadge();
-  }
-}
-
-/* ═══ Modal config ═══ */
-function openFbConfigModal() {
-  document.getElementById('fbConfigError').textContent = '';
-  document.getElementById('fbEmbedBar').classList.remove('visible');
-  document.getElementById('fbConfigInput').value = gsUrl || '';
-  const btn = document.getElementById('btnFbTest');
-  btn.disabled = false; btn.textContent = '🔌 Tester & Connecter';
-  document.getElementById('fbConfigOverlay').classList.add('open');
-}
-function closeFbConfigModal() {
-  document.getElementById('fbConfigOverlay').classList.remove('open');
-}
-function copyAppsScript() {
-  const code = document.getElementById('appsScriptCode').textContent;
-  navigator.clipboard.writeText(code.trim())
-    .then(() => showToast('📋 Code copié dans le presse-papier !'))
-    .catch(() => showToast('⚠ Sélectionnez et copiez manuellement'));
-}
-
-async function testFbConfig() {
-  const url   = document.getElementById('fbConfigInput').value.trim();
-  const errEl = document.getElementById('fbConfigError');
-  const btn   = document.getElementById('btnFbTest');
-  errEl.textContent = '';
-  if (!url || !url.startsWith('https://script.google.com')) {
-    errEl.textContent = '⚠ URL invalide — doit commencer par https://script.google.com/macros/s/…';
-    return;
-  }
-  btn.disabled = true; btn.textContent = 'Test en cours…';
-  const prevUrl = gsUrl;
-  gsUrl = url;
-  try {
-    const data = await gsCall({});
-    if (data.error) throw new Error(data.error);
-    gsConnected = true;
-    localStorage.setItem('br_sheetsurl', url);
-    credEntries = data.cred || [];
-    debEntries  = data.deb  || [];
-    _savedStamp = JSON.stringify({c: credEntries, d: debEntries});
-    localStorage.setItem('br_cred', JSON.stringify(credEntries));
-    localStorage.setItem('br_deb',  JSON.stringify(debEntries));
-    render(); updateUnsavedBadge();
-    setDbStatus('connected');
-    startPoller();
-    document.getElementById('fbEmbedBar').classList.add('visible');
-    btn.textContent = '✔ Connecté !';
-    showToast('✔ Google Sheets connecté !');
-  } catch(e) {
-    gsUrl = prevUrl;
-    errEl.textContent = '⚠ ' + e.message;
-    btn.disabled = false; btn.textContent = '🔌 Tester & Connecter';
-  }
-}
-
-function embedFbConfig() {
-  if (!gsUrl) return;
-  let html = document.documentElement.outerHTML;
-  html = html.replace(
-    /\/\* @@SHEETSURL@@ \*\/[\s\S]*?\/\* @@SHEETSURL@@ \*\//,
-    '/* @@SHEETSURL@@ */\nvar SHEETS_URL = ' + JSON.stringify(gsUrl) + ';\n/* @@SHEETSURL@@ */'
-  );
-  const blob = new Blob([html], {type: 'text/html;charset=utf-8'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a'); a.href = url; a.download = 'index.html';
-  document.body.appendChild(a); a.click();
-  document.body.removeChild(a); URL.revokeObjectURL(url);
-  showToast('✔ index.html généré — partagez ce fichier avec tous les membres');
-  closeFbConfigModal();
-}
 
 /* ════════════════════════════════════
    INIT
@@ -1317,9 +1115,7 @@ document.getElementById('cDate').value = today;
 document.getElementById('dDate').value = today;
 document.getElementById('lockCta').classList.add('visible');
 applyTheme();
-render();
-updateUnsavedBadge();
-initFirebase();
+initDB();
 
 /* ════════════════════════════════════
    THÈME
@@ -1415,7 +1211,7 @@ function activateSession() {
   document.getElementById('lockCta').classList.remove('visible');
   document.getElementById('credForm').classList.remove('locked');
   document.getElementById('debForm').classList.remove('locked');
-  render(); updateUnsavedBadge();
+  render();
 }
 function closeSession() {
   isAdmin = false;
@@ -1425,7 +1221,7 @@ function closeSession() {
   document.getElementById('lockCta').classList.add('visible');
   document.getElementById('credForm').classList.add('locked');
   document.getElementById('debForm').classList.add('locked');
-  render(); updateUnsavedBadge();
+  render();
 }
 function handleFormClick(e, type) {
   if (!isAdmin) { e.stopPropagation(); openPinModal('add', type, 'add'); }
@@ -1529,24 +1325,42 @@ function renderDetailLines() {
 }
 
 /* ── Enregistrer ── */
-function saveEventWithDetails() {
+async function saveEventWithDetails() {
   if (!tempDetails.length) return;
   const type=detailModalType, total=tempDetails.reduce((s,d)=>s+d.montant,0);
-  if (editingEntryId !== null) {
-    const arr=type==='cred'?credEntries:debEntries;
-    const entry=arr.find(e=>e.id===editingEntryId);
-    if (entry) { entry.details=tempDetails.map(d=>({...d})); entry.amt=total; }
-    const n=tempDetails.length; closeDetailsModal(); save(); render();
-    showToast(`✔ Mis à jour — ${n} détail${n>1?'s':''}, total ${fmt(total)}`);
-  } else {
-    const ids=type==='cred'?{desc:'cDesc',date:'cDate',amt:'cAmt'}:{desc:'dDesc',date:'dDate',amt:'dAmt'};
-    const desc=document.getElementById(ids.desc).value.trim();
-    const date=document.getElementById(ids.date).value;
-    const entry={id:Date.now(), desc, date, amt:total, details:tempDetails.map(d=>({...d}))};
-    if (type==='cred') credEntries.push(entry); else debEntries.push(entry);
-    document.getElementById(ids.desc).value=''; document.getElementById(ids.amt).value='';
-    const n=tempDetails.length; closeDetailsModal(); save(); render();
-    showToast(`✔ Ajouté — ${n} détail${n>1?'s':''}, total ${fmt(total)}`);
+  const btn=document.getElementById('btnSaveDetails');
+  btn.disabled=true; btn.textContent='Enregistrement…';
+  try {
+    if (editingEntryId !== null) {
+      const arr=type==='cred'?credEntries:debEntries;
+      const entry=arr.find(e=>e.id===editingEntryId);
+      if (!entry) return;
+      await apiCall('edit_transaction',{
+        id:editingEntryId, desc:entry.desc, date:entry.date, amt:total,
+        details:tempDetails.map(d=>({nom:d.nom,montant:d.montant,motif:d.motif}))
+      });
+      entry.details=tempDetails.map(d=>({...d})); entry.amt=total;
+      const n=tempDetails.length; closeDetailsModal(); render();
+      showToast(`✔ Mis à jour — ${n} détail${n>1?'s':''}, total ${fmt(total)}`);
+    } else {
+      const ids=type==='cred'?{desc:'cDesc',date:'cDate',amt:'cAmt'}:{desc:'dDesc',date:'dDate',amt:'dAmt'};
+      const desc=document.getElementById(ids.desc).value.trim();
+      const date=document.getElementById(ids.date).value;
+      const result=await apiCall('add_transaction',{
+        type, desc, date, amt:total,
+        details:tempDetails.map(d=>({nom:d.nom,montant:d.montant,motif:d.motif}))
+      });
+      const entry={id:result.id, desc, date, amt:total, details:tempDetails.map(d=>({...d}))};
+      if (type==='cred') credEntries.push(entry); else debEntries.push(entry);
+      document.getElementById(ids.desc).value=''; document.getElementById(ids.amt).value='';
+      const n=tempDetails.length; closeDetailsModal(); render();
+      showToast(`✔ Ajouté — ${n} détail${n>1?'s':''}, total ${fmt(total)}`);
+    }
+  } catch(e) {
+    showToast('⚠ Erreur : '+e.message);
+  } finally {
+    btn.disabled=false;
+    btn.textContent=editingEntryId!==null?'Mettre à jour l\'événement':'Enregistrer l\'événement';
   }
 }
 
@@ -1561,7 +1375,7 @@ function toggleExpand(id) {
 /* ════════════════════════════════════
    CRUD
 ════════════════════════════════════ */
-function doAdd(type) {
+async function doAdd(type) {
   if (!isAdmin) { openPinModal('add',type,'add'); return; }
   const ids=type==='cred'?{desc:'cDesc',date:'cDate',amt:'cAmt'}:{desc:'dDesc',date:'dDate',amt:'dAmt'};
   const descEl=document.getElementById(ids.desc), dateEl=document.getElementById(ids.date), amtEl=document.getElementById(ids.amt);
@@ -1570,19 +1384,25 @@ function doAdd(type) {
   if (!desc)             { descEl.style.borderColor='var(--red)'; setTimeout(()=>descEl.style.borderColor='',1500); ok=false; }
   if (isNaN(amt)||amt<=0){ amtEl.style.borderColor='var(--red)';  setTimeout(()=>amtEl.style.borderColor='',1500);  ok=false; }
   if (!ok) return;
-  const entry={id:Date.now(), desc, date, amt, details:null};
-  if (type==='cred') credEntries.push(entry); else debEntries.push(entry);
-  descEl.value=''; amtEl.value=''; descEl.focus();
-  save(); render(); showToast('✔ Opération ajoutée');
+  try {
+    const result=await apiCall('add_transaction',{type, desc, date, amt, details:[]});
+    const entry={id:result.id, desc, date, amt, details:null};
+    if (type==='cred') credEntries.push(entry); else debEntries.push(entry);
+    descEl.value=''; amtEl.value=''; descEl.focus();
+    render(); showToast('✔ Opération ajoutée');
+  } catch(e) { showToast('⚠ '+e.message); }
 }
 function requestDelete(type, id) {
   if (!isAdmin) { openPinModal('del',type,'del',id); return; }
   doDelete(type,id);
 }
-function doDelete(type, id) {
-  if (type==='cred') credEntries=credEntries.filter(e=>e.id!==id);
-  else               debEntries =debEntries.filter(e=>e.id!==id);
-  expandedRows.delete(id); save(); render(); showToast('🗑 Opération supprimée');
+async function doDelete(type, id) {
+  try {
+    await apiCall('delete_transaction',{id});
+    if (type==='cred') credEntries=credEntries.filter(e=>e.id!==id);
+    else               debEntries =debEntries.filter(e=>e.id!==id);
+    expandedRows.delete(id); render(); showToast('🗑 Opération supprimée');
+  } catch(e) { showToast('⚠ '+e.message); }
 }
 
 /* ════════════════════════════════════

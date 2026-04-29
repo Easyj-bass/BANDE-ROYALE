@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BAND ROYAL — Programme</title>
+<link rel="icon" type="image/jpeg" href="logobr.jpeg">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+
+/* ══════════════════════════════════════════════════
+   VARIABLES (identiques à index.html)
+══════════════════════════════════════════════════ */
+:root {
+  --bg:          #07080f;  --bg2:    #0b0d18;
+  --card:        #111521;  --card2:  #181d2e;  --card3: #1e2438;
+  --border:      #252d45;  --border2:#1a2035;
+  --gold:        #d4a843;  --gold2:  #f0cc6e;
+  --gold-dim:    #7a5e1e;  --gold-glow: rgba(212,168,67,.18);
+  --green:       #10d98a;  --green-dim: rgba(16,217,138,.12);
+  --red:         #f43f5e;  --red-dim:   rgba(244,63,94,.12);
+  --text:        #dde4f5;  --text2: #a8b4cc;  --muted: #566077;
+  --font-royal:  'Cinzel', serif;
+  --font-body:   'Inter', sans-serif;
+  --font-mono:   'DM Mono', monospace;
+  --r-sm:8px; --r-md:13px; --r-lg:18px; --r-xl:24px;
+  --shadow-card: 0 2px 20px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.04);
+  --shadow-deep: 0 20px 60px rgba(0,0,0,.7);
+  --t: all .22s ease;
+  --header-bg:  rgba(7,8,15,.9);
+  --input-bg:   #0b0d18;
+  --overlay-lock: rgba(7,8,15,.8);
+}
+[data-theme="light"] {
+  --bg:#f1f5ff; --bg2:#e8eeff; --card:#ffffff; --card2:#f5f8ff; --card3:#edf1fc;
+  --border:#d4daf0; --border2:#e4e9f8;
+  --gold:#9a6e00; --gold2:#b8860b; --gold-dim:#c09a30; --gold-glow:rgba(154,110,0,.1);
+  --green:#00875a; --green-dim:rgba(0,135,90,.1);
+  --red:#cc1f3a; --red-dim:rgba(204,31,58,.1);
+  --text:#111827; --text2:#374151; --muted:#6b7280;
+  --shadow-card:0 2px 16px rgba(0,20,80,.08),0 0 0 1px rgba(0,20,80,.06);
+  --shadow-deep:0 20px 60px rgba(0,0,0,.25);
+  --header-bg:rgba(241,245,255,.92);
+  --input-bg:#ffffff;
+  --overlay-lock:rgba(241,245,255,.82);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; overflow-x: hidden; transition: background .3s, color .3s; }
+
+/* ── HEADER ── */
+header {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--header-bg); backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border2);
+  padding: 0 40px; height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.logo-wrap { display: flex; align-items: center; gap: 13px; flex-shrink: 0; }
+.logo-img  { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; border: 1.5px solid rgba(212,168,67,.4); box-shadow: 0 0 16px rgba(212,168,67,.2); }
+.logo-text { font-family: var(--font-royal); font-size: 1.22rem; font-weight: 900; letter-spacing: .1em; background: linear-gradient(100deg,#c9a84c 0%,#f0cc6e 50%,#c9a84c 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.logo-sub  { font-family: var(--font-mono); font-size: .55rem; color: var(--muted); letter-spacing: .2em; text-transform: uppercase; margin-top: 3px; }
+
+/* Nav */
+.main-nav { display: flex; gap: 4px; }
+.nav-link {
+  font-family: var(--font-mono); font-size: .7rem; text-decoration: none;
+  padding: 7px 16px; border-radius: 20px;
+  border: 1px solid var(--border); color: var(--muted);
+  transition: var(--t); letter-spacing: .06em;
+}
+.nav-link:hover  { border-color: var(--gold-dim); color: var(--gold); background: var(--gold-glow); }
+.nav-link.active { border-color: var(--gold-dim); color: var(--gold); background: var(--gold-glow); }
+
+.header-right { display: flex; align-items: center; gap: 10px; }
+.header-date  { font-family: var(--font-mono); font-size: .68rem; color: var(--muted); padding: 0 14px; border-right: 1px solid var(--border); }
+.btn-theme    { width:34px; height:34px; border-radius:50%; border:1px solid var(--border); background:none; cursor:pointer; font-size:.95rem; display:flex; align-items:center; justify-content:center; transition:var(--t); color:var(--muted); }
+.btn-theme:hover { background: var(--gold-glow); border-color: var(--gold-dim); }
+.mode-badge   { font-family:var(--font-mono); font-size:.62rem; padding:5px 14px; border-radius:20px; border:1px solid; letter-spacing:.08em; text-transform:uppercase; transition:var(--t); }
+.mode-badge.view { border-color:var(--border); color:var(--muted); }
+.mode-badge.edit { border-color:var(--gold-dim); color:var(--gold); background:var(--gold-glow); }
+
+/* ── BARRES ── */
+.info-bar { margin:14px 40px 0; border-radius:var(--r-md); padding:11px 20px; display:none; align-items:center; justify-content:space-between; gap:14px; }
+.info-bar.visible { display:flex; }
+.info-bar.session { background:var(--green-dim); border:1px solid rgba(16,217,138,.2); }
+.info-bar.lock    { background:var(--gold-glow);  border:1px dashed rgba(212,168,67,.3); }
+.info-bar-text    { font-family:var(--font-mono); font-size:.7rem; }
+.info-bar.session .info-bar-text { color:var(--green); }
+.info-bar.lock    .info-bar-text { color:var(--text2); }
+.info-bar.lock    .info-bar-text strong { color:var(--gold); }
+.btn-session-end { background:none; border:1px solid rgba(16,217,138,.25); border-radius:var(--r-sm); color:var(--green); font-family:var(--font-mono); font-size:.64rem; padding:5px 14px; cursor:pointer; transition:var(--t); white-space:nowrap; }
+.btn-session-end:hover { background:rgba(16,217,138,.1); }
+.btn-unlock { background:var(--gold); color:#000; border:none; border-radius:var(--r-sm); font-family:var(--font-royal); font-weight:700; font-size:.72rem; padding:8px 18px; cursor:pointer; white-space:nowrap; letter-spacing:.05em; transition:opacity .2s; }
+.btn-unlock:hover { opacity:.85; }
+
+.db-bar { margin:10px 40px 0; border-radius:var(--r-md); padding:10px 18px; display:flex; align-items:center; justify-content:space-between; gap:14px; border:1px solid var(--border); background:var(--card2); }
+.db-bar.db-ok   { border-color:rgba(16,217,138,.3); background:var(--green-dim); }
+.db-bar.db-warn { border-color:rgba(212,168,67,.3); background:var(--gold-glow); }
+.db-bar.db-err  { border-color:rgba(244,63,94,.2);  background:var(--red-dim); }
+.db-status-wrap { display:flex; align-items:center; gap:10px; }
+.db-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; background:var(--muted); }
+.db-bar.db-ok   .db-dot { background:var(--green); box-shadow:0 0 6px var(--green); animation:pulse 2s infinite; }
+.db-bar.db-warn .db-dot { background:var(--gold); }
+.db-bar.db-err  .db-dot { background:var(--red); }
+.db-status-text { font-family:var(--font-mono); font-size:.67rem; }
+.db-bar.db-ok   .db-status-text { color:var(--green); }
+.db-bar.db-warn .db-status-text { color:var(--gold); }
+.db-bar.db-err  .db-status-text { color:var(--red); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+/* ══════════════════════════════════════════════════
+   SECTION ÉVÉNEMENTS
+══════════════════════════════════════════════════ */
+.events-section { margin: 24px 40px 60px; }
+.events-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:14px; }
+.events-title { font-family:var(--font-royal); font-size:1.5rem; font-weight:900; color:var(--text); letter-spacing:.06em; }
+.events-title span { color:var(--gold); }
+.btn-new-event {
+  background:var(--gold); color:#000; border:none; border-radius:var(--r-md);
+  font-family:var(--font-royal); font-weight:700; font-size:.84rem;
+  padding:12px 26px; cursor:pointer; letter-spacing:.05em;
+  box-shadow:0 4px 20px rgba(212,168,67,.3);
+  transition:opacity .2s, transform .12s;
+}
+.btn-new-event:hover  { opacity:.88; }
+.btn-new-event:active { transform:scale(.96); }
+
+/* Filtres */
+.filter-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:24px; }
+.filter-btn {
+  font-family:var(--font-mono); font-size:.68rem; padding:7px 16px;
+  border-radius:20px; border:1px solid var(--border); background:none;
+  color:var(--muted); cursor:pointer; transition:var(--t); letter-spacing:.06em;
+}
+.filter-btn:hover { border-color:var(--gold-dim); color:var(--gold); background:var(--gold-glow); }
+.filter-btn.active { border-color:var(--gold-dim); color:var(--gold); background:var(--gold-glow); }
+
+/* Grille d'événements */
+.events-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+.events-empty { grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--muted); font-family:var(--font-mono); font-size:.8rem; }
+.events-empty .empty-icon { font-size:2.5rem; margin-bottom:16px; }
+
+/* Card événement */
+.event-card {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:var(--r-lg); overflow:hidden;
+  box-shadow:var(--shadow-card); transition:var(--t);
+  display:flex; flex-direction:column;
+}
+.event-card:hover { border-color:var(--gold-dim); box-shadow:var(--shadow-card),0 0 0 1px rgba(212,168,67,.1); transform:translateY(-2px); }
+
+.event-img-wrap { position:relative; height:180px; overflow:hidden; background:var(--card2); flex-shrink:0; }
+.event-img { width:100%; height:100%; object-fit:cover; transition:transform .4s; }
+.event-card:hover .event-img { transform:scale(1.04); }
+.event-img-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:3rem; color:var(--border); }
+
+.event-type-badge {
+  position:absolute; top:12px; left:12px;
+  font-family:var(--font-mono); font-size:.6rem; font-weight:700;
+  padding:4px 11px; border-radius:20px; letter-spacing:.08em;
+  text-transform:uppercase; backdrop-filter:blur(8px);
+}
+
+.event-body { padding:16px; flex:1; display:flex; flex-direction:column; gap:10px; }
+.event-name { font-family:var(--font-royal); font-size:.95rem; font-weight:700; color:var(--text); letter-spacing:.04em; line-height:1.3; }
+.event-meta { display:flex; flex-direction:column; gap:5px; }
+.event-meta-row { display:flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:.68rem; color:var(--text2); }
+.event-meta-row .ico { width:16px; text-align:center; color:var(--muted); }
+
+.event-musicians { margin-top:4px; }
+.event-musicians-title { font-family:var(--font-mono); font-size:.6rem; color:var(--muted); text-transform:uppercase; letter-spacing:.12em; margin-bottom:8px; }
+.musician-tag {
+  display:inline-flex; align-items:center; gap:5px;
+  font-family:var(--font-mono); font-size:.65rem;
+  background:var(--card2); border:1px solid var(--border);
+  border-radius:20px; padding:3px 10px; margin:2px 3px 2px 0;
+  color:var(--text2);
+}
+.musician-tag .inst { color:var(--muted); }
+
+.event-footer { padding:12px 16px; border-top:1px solid var(--border2); display:flex; gap:8px; }
+.btn-ev-edit {
+  flex:1; background:var(--gold-glow); border:1px solid var(--gold-dim);
+  border-radius:var(--r-sm); color:var(--gold); font-family:var(--font-mono); font-size:.68rem;
+  padding:8px; cursor:pointer; transition:var(--t);
+}
+.btn-ev-edit:hover { background:rgba(212,168,67,.25); }
+.btn-ev-del {
+  background:var(--red-dim); border:1px solid rgba(244,63,94,.2);
+  border-radius:var(--r-sm); color:var(--red); font-family:var(--font-mono); font-size:.68rem;
+  padding:8px 12px; cursor:pointer; transition:var(--t);
+}
+.btn-ev-del:hover { background:rgba(244,63,94,.2); }
+
+/* Type badge colors */
+.type-concert    { background:rgba(16,217,138,.2);  color:#10d98a;  border:1px solid rgba(16,217,138,.3); }
+.type-cabaret    { background:rgba(167,100,220,.2); color:#b668ff;  border:1px solid rgba(167,100,220,.3); }
+.type-acoustique { background:rgba(59,130,246,.2);  color:#60a5fa;  border:1px solid rgba(59,130,246,.3); }
+.type-mariage    { background:rgba(244,114,182,.2); color:#f472b6;  border:1px solid rgba(244,114,182,.3); }
+.type-funerail   { background:rgba(100,116,139,.2); color:#94a3b8;  border:1px solid rgba(100,116,139,.3); }
+.type-autre      { background:var(--gold-glow);     color:var(--gold); border:1px solid rgba(212,168,67,.3); }
+
+/* ══════════════════════════════════════════════════
+   MODAL ÉVÉNEMENT
+══════════════════════════════════════════════════ */
+.modal-overlay {
+  position:fixed; inset:0; z-index:9000;
+  background:rgba(0,0,0,.7); backdrop-filter:blur(6px);
+  display:none; align-items:center; justify-content:center; padding:20px;
+}
+.modal-overlay.open { display:flex; }
+
+.modal-ev {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:var(--r-xl); width:640px; max-width:100%;
+  max-height:calc(100vh - 40px); overflow-y:auto;
+  box-shadow:var(--shadow-deep);
+  animation:popIn .28s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn { from{opacity:0;transform:scale(.92)} to{opacity:1;transform:scale(1)} }
+
+.modal-ev-head {
+  padding:24px 28px 18px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:14px;
+}
+.modal-ev-logo { width:36px; height:36px; border-radius:9px; object-fit:cover; border:1px solid var(--gold-dim); }
+.modal-ev-title { font-family:var(--font-royal); font-size:1.1rem; font-weight:900; letter-spacing:.08em; color:var(--gold2); }
+.modal-ev-body  { padding:24px 28px; display:flex; flex-direction:column; gap:18px; }
+.modal-ev-foot  { padding:16px 28px 24px; display:flex; gap:10px; }
+
+.form-label { font-family:var(--font-mono); font-size:.6rem; color:var(--muted); text-transform:uppercase; letter-spacing:.12em; margin-bottom:6px; display:block; }
+
+input[type=text], input[type=date], input[type=number], select, textarea {
+  background:var(--input-bg); border:1.5px solid var(--border);
+  border-radius:var(--r-sm); color:var(--text);
+  font-family:var(--font-mono); font-size:.8rem;
+  padding:9px 12px; outline:none; width:100%;
+  transition:border-color .2s, box-shadow .2s, background .3s, color .3s;
+}
+select { cursor:pointer; }
+textarea { resize:vertical; min-height:72px; }
+input::placeholder, textarea::placeholder { color:var(--muted); }
+input:focus, select:focus, textarea:focus { border-color:var(--gold-dim); box-shadow:0 0 0 3px rgba(212,168,67,.12); }
+
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.form-row.trio { grid-template-columns:1fr 1fr 1fr; }
+
+/* Image upload */
+.img-upload-wrap { border:2px dashed var(--border); border-radius:var(--r-md); padding:16px; text-align:center; cursor:pointer; transition:var(--t); position:relative; overflow:hidden; }
+.img-upload-wrap:hover { border-color:var(--gold-dim); background:var(--gold-glow); }
+.img-upload-wrap input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.img-upload-text { font-family:var(--font-mono); font-size:.72rem; color:var(--muted); pointer-events:none; }
+.img-upload-icon { font-size:1.8rem; margin-bottom:6px; }
+.img-preview { max-height:150px; object-fit:cover; border-radius:var(--r-sm); display:none; margin:10px auto 0; }
+
+/* Musicians builder */
+.musicians-builder { border:1.5px solid var(--border); border-radius:var(--r-md); overflow:hidden; }
+.musicians-add-row { display:grid; grid-template-columns:1fr 1fr 38px; gap:8px; padding:12px; background:var(--card2); border-bottom:1px solid var(--border); }
+.musicians-add-row input { margin:0; }
+.btn-musician-add {
+  background:var(--gold); border:none; border-radius:var(--r-sm); color:#000;
+  font-size:1.1rem; font-weight:700; cursor:pointer; transition:opacity .2s;
+}
+.btn-musician-add:hover { opacity:.85; }
+.musician-list { padding:8px 12px; min-height:40px; }
+.musician-item {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:7px 10px; border-radius:var(--r-sm); margin-bottom:4px;
+  background:var(--card3); border:1px solid var(--border2);
+  font-family:var(--font-mono); font-size:.75rem;
+}
+.musician-item:last-child { margin-bottom:0; }
+.musician-item-left { display:flex; align-items:center; gap:10px; }
+.musician-item-name { color:var(--text); font-weight:500; }
+.musician-item-inst { color:var(--muted); }
+.btn-musician-del { background:none; border:none; color:var(--muted); cursor:pointer; font-size:.85rem; padding:2px 5px; border-radius:4px; transition:all .15s; }
+.btn-musician-del:hover { color:var(--red); background:var(--red-dim); }
+.musician-empty { font-family:var(--font-mono); font-size:.68rem; color:var(--muted); font-style:italic; padding:8px; }
+
+/* Modal buttons */
+.btn-modal-cancel {
+  flex:1; background:none; border:1.5px solid var(--border); border-radius:var(--r-sm);
+  color:var(--muted); font-family:var(--font-mono); font-size:.74rem;
+  padding:12px; cursor:pointer; transition:all .2s;
+}
+.btn-modal-cancel:hover { border-color:var(--text2); color:var(--text); }
+.btn-modal-save {
+  flex:2; background:var(--gold); color:#000; border:none; border-radius:var(--r-sm);
+  font-family:var(--font-royal); font-weight:700; font-size:.8rem;
+  padding:12px; cursor:pointer; letter-spacing:.04em; transition:opacity .2s;
+}
+.btn-modal-save:hover { opacity:.87; }
+.btn-modal-save:disabled { opacity:.35; cursor:not-allowed; }
+
+/* ── MODAL PIN (identique index.html) ── */
+.pin-overlay { position:fixed; inset:0; z-index:9500; background:rgba(0,0,0,.75); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; }
+.pin-overlay.open { display:flex; }
+.pin-modal { background:var(--card); border:1px solid var(--border); border-radius:var(--r-xl); padding:32px 28px; width:340px; max-width:95vw; text-align:center; box-shadow:var(--shadow-deep); animation:popIn .28s cubic-bezier(.34,1.56,.64,1); }
+.pin-logo  { width:52px; height:52px; border-radius:12px; object-fit:cover; border:2px solid var(--gold-dim); margin-bottom:12px; }
+.pin-title { font-family:var(--font-royal); font-size:1.2rem; font-weight:900; letter-spacing:.1em; background:linear-gradient(100deg,#c9a84c 0%,#f0cc6e 50%,#c9a84c 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:4px; }
+.pin-sub   { font-family:var(--font-mono); font-size:.68rem; color:var(--muted); margin-bottom:18px; }
+.pin-input { margin-bottom:14px; }
+.pin-input input { text-align:center; letter-spacing:.2em; font-size:1.1rem; }
+.numpad { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+.np-btn {
+  height:46px; border:1px solid var(--border); border-radius:var(--r-sm);
+  background:var(--card2); color:var(--text); font-family:var(--font-mono);
+  font-size:.9rem; cursor:pointer; transition:all .15s;
+}
+.np-btn:hover  { background:var(--card3); border-color:var(--gold-dim); }
+.np-btn.cancel { color:var(--muted); }
+.np-btn.enter  { background:var(--gold); color:#000; border-color:var(--gold); font-weight:700; }
+.np-btn.enter:hover { opacity:.87; }
+.pin-error    { font-family:var(--font-mono); font-size:.7rem; color:var(--red); min-height:18px; }
+.pin-attempts { font-family:var(--font-mono); font-size:.65rem; color:var(--muted); margin-top:4px; min-height:16px; }
+
+/* ── TOAST ── */
+#toast {
+  position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(80px);
+  background:var(--card2); color:var(--text); border:1px solid var(--border);
+  border-radius:30px; font-family:var(--font-mono); font-size:.78rem;
+  padding:11px 24px; opacity:0; pointer-events:none; z-index:9999;
+  box-shadow:0 8px 32px rgba(0,0,0,.3); transition:opacity .3s, transform .3s;
+  white-space:nowrap;
+}
+#toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ── Responsive ── */
+@media (max-width:1024px) {
+  header, .info-bar, .db-bar, .events-section { margin-left:20px; margin-right:20px; }
+  header { padding:0 20px; }
+  .events-grid { grid-template-columns:repeat(2,1fr); }
+}
+@media (max-width:768px) {
+  header, .info-bar, .db-bar, .events-section { margin-left:14px; margin-right:14px; }
+  header { padding:0 14px; height:58px; flex-wrap:wrap; height:auto; padding:12px 14px; gap:10px; }
+  .main-nav { order:3; width:100%; justify-content:center; }
+  .header-date { display:none; }
+  .events-grid { grid-template-columns:1fr; }
+  .form-row, .form-row.trio { grid-template-columns:1fr; }
+  .modal-ev { padding:0; }
+  .modal-ev-head, .modal-ev-body, .modal-ev-foot { padding-left:18px; padding-right:18px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="logo-wrap">
+    <img src="logobr.jpeg" class="logo-img" alt="Band Royal" onerror="this.style.display='none'">
+    <div>
+      <div class="logo-text">BAND ROYAL</div>
+      <div class="logo-sub">Programme · Événements</div>
+    </div>
+  </div>
+  <nav class="main-nav">
+    <a href="index.html" class="nav-link">💰 Finance</a>
+    <a href="programme.html" class="nav-link active">📅 Programme</a>
+  </nav>
+  <div class="header-right">
+    <div class="header-date" id="dateDisplay"></div>
+    <button class="btn-theme" id="themeToggle" onclick="toggleTheme()" title="Mode jour/nuit">🌙</button>
+    <div class="mode-badge view" id="modeBadge">👁 Consultation</div>
+  </div>
+</header>
+
+<!-- ══ BARRE DB ══ -->
+<div class="db-bar" id="dbBar">
+  <div class="db-status-wrap">
+    <div class="db-dot"></div>
+    <div class="db-status-text" id="dbStatusText">Connexion à la base de données…</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button onclick="loadEvents()" style="background:none;border:1px solid rgba(16,217,138,.35);border-radius:8px;color:var(--green);font-family:var(--font-mono);font-size:.62rem;padding:6px 12px;cursor:pointer;display:none" id="btnReload">🔄 Actualiser</button>
+  </div>
+</div>
+
+<!-- ══ BARRES INFO ══ -->
+<div class="info-bar session" id="sessionBar">
+  <div class="info-bar-text">✔ &nbsp;Mode administrateur — ajout, modification et suppression autorisés</div>
+  <button class="btn-session-end" onclick="closeSession()">🔒 Terminer la session</button>
+</div>
+<div class="info-bar lock" id="lockCta">
+  <div class="info-bar-text">🔒 <strong>Mode consultation</strong> — Entrez le code administrateur pour modifier les événements.</div>
+  <button class="btn-unlock" onclick="openPinModal()">🗝 Déverrouiller</button>
+</div>
+
+<!-- ══ SECTION ÉVÉNEMENTS ══ -->
+<div class="events-section">
+  <div class="events-top">
+    <div class="events-title">Calendrier <span>Band Royal</span></div>
+    <button class="btn-new-event" id="btnNewEvent" style="display:none" onclick="openEventModal()">
+      + Nouvel événement
+    </button>
+  </div>
+
+  <div class="filter-bar" id="filterBar">
+    <button class="filter-btn active" data-type="all"        onclick="setFilter('all')">Tous</button>
+    <button class="filter-btn"        data-type="concert"    onclick="setFilter('concert')">🎵 Concerts</button>
+    <button class="filter-btn"        data-type="cabaret"    onclick="setFilter('cabaret')">🎭 Cabaret</button>
+    <button class="filter-btn"        data-type="acoustique" onclick="setFilter('acoustique')">🎸 Acoustique</button>
+    <button class="filter-btn"        data-type="mariage"    onclick="setFilter('mariage')">💍 Mariages</button>
+    <button class="filter-btn"        data-type="funerail"   onclick="setFilter('funerail')">🕯 Funérailles</button>
+    <button class="filter-btn"        data-type="autre"      onclick="setFilter('autre')">📅 Autres</button>
+  </div>
+
+  <div class="events-grid" id="eventsGrid">
+    <div class="events-empty"><div class="empty-icon">🎵</div>Chargement des événements…</div>
+  </div>
+</div>
+
+<!-- ══ MODAL ÉVÉNEMENT ══ -->
+<div class="modal-overlay" id="eventOverlay">
+  <div class="modal-ev">
+    <div class="modal-ev-head">
+      <img src="logobr.jpeg" class="modal-ev-logo" alt="" onerror="this.style.display='none'">
+      <div class="modal-ev-title" id="evModalTitle">NOUVEL ÉVÉNEMENT</div>
+    </div>
+    <div class="modal-ev-body">
+
+      <!-- Nom -->
+      <div>
+        <label class="form-label">Nom de l'événement *</label>
+        <input type="text" id="evNom" placeholder="Ex: Gala de fin d'année…">
+      </div>
+
+      <!-- Type + Date -->
+      <div class="form-row">
+        <div>
+          <label class="form-label">Type *</label>
+          <select id="evType">
+            <option value="concert">🎵 Concert / Jeux</option>
+            <option value="cabaret">🎭 Cabaret</option>
+            <option value="acoustique">🎸 Acoustique</option>
+            <option value="mariage">💍 Mariage</option>
+            <option value="funerail">🕯 Funérailles</option>
+            <option value="autre">📅 Autre</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Date *</label>
+          <input type="date" id="evDate">
+        </div>
+      </div>
+
+      <!-- Lieu -->
+      <div>
+        <label class="form-label">Lieu / Salle</label>
+        <input type="text" id="evLieu" placeholder="Ex: Salle des fêtes, Hôtel Terminus…">
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label class="form-label">Description / Notes</label>
+        <textarea id="evDescription" placeholder="Informations complémentaires…"></textarea>
+      </div>
+
+      <!-- Image -->
+      <div>
+        <label class="form-label">Photo / Affiche</label>
+        <div class="img-upload-wrap" id="imgUploadWrap" onclick="triggerImagePick()">
+          <input type="file" id="evImage" accept="image/*" onchange="previewImage(this)" style="display:none">
+          <div class="img-upload-icon">🖼</div>
+          <div class="img-upload-text" id="imgUploadText">Cliquez pour choisir une image (jpg, png…)</div>
+          <img id="imgPreview" class="img-preview" src="" alt="Aperçu">
+        </div>
+        <input type="hidden" id="evImagePath" value="">
+      </div>
+
+      <!-- Musiciens -->
+      <div>
+        <label class="form-label">Musiciens assignés</label>
+        <div class="musicians-builder">
+          <div class="musicians-add-row">
+            <input type="text"   id="muNom"  placeholder="Nom du musicien…" onkeydown="if(event.key==='Enter'){event.preventDefault();addMusician();}">
+            <input type="text"   id="muInst" placeholder="Instrument (optionnel)…" onkeydown="if(event.key==='Enter'){event.preventDefault();addMusician();}">
+            <button class="btn-musician-add" onclick="addMusician()" title="Ajouter">+</button>
+          </div>
+          <div class="musician-list" id="musicianList">
+            <div class="musician-empty">Aucun musicien — ajoutez les noms ci-dessus</div>
+          </div>
+        </div>
+        <div style="font-family:var(--font-mono);font-size:.62rem;color:var(--muted);margin-top:6px">
+          ℹ Chaque musicien sera automatiquement ajouté dans le journal financier (cotisation 500 FCFA à verser)
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-ev-foot">
+      <button class="btn-modal-cancel" onclick="closeEventModal()">Annuler</button>
+      <button class="btn-modal-save" id="btnSaveEvent" onclick="saveEvent()">Enregistrer l'événement</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL PIN ══ -->
+<div class="pin-overlay" id="pinOverlay">
+  <div class="pin-modal">
+    <img src="logobr.jpeg" class="pin-logo" alt="" onerror="this.style.display='none'">
+    <div class="pin-title">BAND ROYAL</div>
+    <div class="pin-sub" id="pinSub">Code administrateur requis</div>
+    <div class="pin-input">
+      <input type="password" id="pinField" inputmode="numeric" autocomplete="off"
+             placeholder="Entrez le code" maxlength="12" onkeydown="onPinKey(event)">
+    </div>
+    <div class="numpad">
+      <button class="np-btn" onclick="pinPress('1')">1</button>
+      <button class="np-btn" onclick="pinPress('2')">2</button>
+      <button class="np-btn" onclick="pinPress('3')">3</button>
+      <button class="np-btn" onclick="pinPress('4')">4</button>
+      <button class="np-btn" onclick="pinPress('5')">5</button>
+      <button class="np-btn" onclick="pinPress('6')">6</button>
+      <button class="np-btn" onclick="pinPress('7')">7</button>
+      <button class="np-btn" onclick="pinPress('8')">8</button>
+      <button class="np-btn" onclick="pinPress('9')">9</button>
+      <button class="np-btn cancel" onclick="closePinModal()">Annuler</button>
+      <button class="np-btn" onclick="pinPress('0')">0</button>
+      <button class="np-btn enter" onclick="pinSubmit()">✓</button>
+    </div>
+    <div class="pin-error" id="pinError"></div>
+    <div class="pin-attempts" id="pinAttempts"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="supabase-client.js"></script>
+<script>
+/* ════════════════════════════════════
+   CONSTANTES
+════════════════════════════════════ */
+const SECRET    = '0157578726';
+const MAX_TRIES = 5;
+const TYPE_LABELS = {
+  concert:    '🎵 Concert',
+  cabaret:    '🎭 Cabaret',
+  acoustique: '🎸 Acoustique',
+  mariage:    '💍 Mariage',
+  funerail:   '🕯 Funérailles',
+  autre:      '📅 Autre',
+};
+const TYPE_ICONS = {
+  concert:'🎵', cabaret:'🎭', acoustique:'🎸', mariage:'💍', funerail:'🕯', autre:'📅',
+};
+
+/* ════════════════════════════════════
+   ÉTAT
+════════════════════════════════════ */
+let isAdmin   = false;
+let tries     = parseInt(localStorage.getItem('br_tries')  || '0');
+let lockedUntil = parseInt(localStorage.getItem('br_lock') || '0');
+let allEvents  = [];
+let currentFilter = 'all';
+let editingEventId = null;
+let tempMusicians  = [];
+let pendingDelete  = null;
+let isDark = localStorage.getItem('br_theme') !== 'light';
+let toastTimer;
+
+/* ════════════════════════════════════
+   UTILITAIRES
+════════════════════════════════════ */
+const escHtml = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmtDate = d => d ? new Date(d+'T00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'}) : '—';
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+/* ════════════════════════════════════
+   THÈME
+════════════════════════════════════ */
+function toggleTheme() {
+  isDark = !isDark;
+  localStorage.setItem('br_theme', isDark ? 'dark' : 'light');
+  applyTheme();
+}
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  document.getElementById('themeToggle').textContent = isDark ? '☀️' : '🌙';
+}
+
+/* ════════════════════════════════════
+   API SUPABASE
+════════════════════════════════════ */
+async function apiCall(action, data = {}) {
+  switch (action) {
+    case 'save_event': {
+      const res = await dbSaveEvent(data.nom, data.type, data.date, data.lieu, data.description, data.image_path, data.musicians || []);
+      return { ok: true, ...res };
+    }
+    case 'edit_event': {
+      await dbEditEvent(data.id, data.nom, data.type, data.date, data.lieu, data.description, data.image_path, data.musicians || []);
+      return { ok: true };
+    }
+    case 'delete_event': {
+      await dbDeleteEvent(data.id);
+      return { ok: true };
+    }
+    default:
+      throw new Error('Action inconnue : ' + action);
+  }
+}
+
+async function apiGet(action) {
+  if (action === 'get_events') return await dbGetEvents();
+  throw new Error('Action inconnue : ' + action);
+}
+
+function setDbStatus(state, detail) {
+  const bar    = document.getElementById('dbBar');
+  const txt    = document.getElementById('dbStatusText');
+  const reload = document.getElementById('btnReload');
+  bar.className = 'db-bar';
+  const map = {
+    connecting: { cls:'db-warn', msg:'🔄 Connexion à Supabase…' },
+    connected:  { cls:'db-ok',   msg:'✔ Supabase connecté — Band Royal' },
+    error:      { cls:'db-err',  msg:'✘ ' + (detail||'Erreur Supabase — vérifiez supabase-client.js') },
+  };
+  const s = map[state] || map.error;
+  bar.classList.add(s.cls);
+  txt.textContent = s.msg;
+  reload.style.display = (state === 'connected') ? '' : 'none';
+}
+
+/* ════════════════════════════════════
+   CHARGEMENT ÉVÉNEMENTS
+════════════════════════════════════ */
+async function loadEvents() {
+  setDbStatus('connecting');
+  try {
+    allEvents = await apiGet('get_events');
+    setDbStatus('connected');
+    renderEvents();
+  } catch(e) {
+    setDbStatus('error', e.message);
+    showToast('⚠ ' + e.message);
+    document.getElementById('eventsGrid').innerHTML = `<div class="events-empty">
+      <div class="empty-icon">⚠</div>
+      ${e.message.includes('non configuré')
+        ? 'Ajoutez vos clés Supabase dans <strong>supabase-client.js</strong>'
+        : e.message}
+    </div>`;
+  }
+}
+
+/* ════════════════════════════════════
+   FILTRES
+════════════════════════════════════ */
+function setFilter(type) {
+  currentFilter = type;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.type === type);
+  });
+  renderEvents();
+}
+
+/* ════════════════════════════════════
+   RENDU ÉVÉNEMENTS
+════════════════════════════════════ */
+function renderEvents() {
+  const grid = document.getElementById('eventsGrid');
+  const filtered = currentFilter === 'all'
+    ? allEvents
+    : allEvents.filter(e => e.type === currentFilter);
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="events-empty">
+      <div class="empty-icon">${currentFilter === 'all' ? '🎵' : (TYPE_ICONS[currentFilter]||'📅')}</div>
+      Aucun événement${currentFilter !== 'all' ? ' de ce type' : ''} — ${isAdmin ? 'créez-en un avec le bouton ci-dessus' : 'revenez plus tard'}
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(ev => renderCard(ev)).join('');
+}
+
+function renderCard(ev) {
+  const typeCls  = 'type-' + ev.type;
+  const typeLabel = TYPE_LABELS[ev.type] || ev.type;
+  const imgHtml  = ev.image_path
+    ? `<img src="${escHtml(ev.image_path)}" class="event-img" alt="${escHtml(ev.nom)}" onerror="this.parentElement.innerHTML='<div class=\\'event-img-placeholder\\'>${TYPE_ICONS[ev.type]||'📅'}</div>'">`
+    : `<div class="event-img-placeholder">${TYPE_ICONS[ev.type]||'📅'}</div>`;
+
+  const musicianTags = (ev.musicians||[]).map(m => `
+    <span class="musician-tag">
+      👤 ${escHtml(m.nom)}${m.instrument ? ` <span class="inst">· ${escHtml(m.instrument)}</span>` : ''}
+    </span>`).join('');
+
+  const adminBtns = isAdmin ? `
+    <div class="event-footer">
+      <button class="btn-ev-edit" onclick="openEditModal(${ev.id})">✏ Modifier</button>
+      <button class="btn-ev-del"  onclick="requestDeleteEvent(${ev.id}, '${escHtml(ev.nom)}')">✕</button>
+    </div>` : '';
+
+  return `
+    <div class="event-card" id="card-${ev.id}">
+      <div class="event-img-wrap">
+        ${imgHtml}
+        <span class="event-type-badge ${typeCls}">${typeLabel}</span>
+      </div>
+      <div class="event-body">
+        <div class="event-name">${escHtml(ev.nom)}</div>
+        <div class="event-meta">
+          <div class="event-meta-row"><span class="ico">📅</span>${fmtDate(ev.date)}</div>
+          ${ev.lieu ? `<div class="event-meta-row"><span class="ico">📍</span>${escHtml(ev.lieu)}</div>` : ''}
+          ${ev.description ? `<div class="event-meta-row"><span class="ico">📝</span>${escHtml(ev.description)}</div>` : ''}
+        </div>
+        ${(ev.musicians||[]).length > 0 ? `
+        <div class="event-musicians">
+          <div class="event-musicians-title">👥 ${ev.musicians.length} musicien(s)</div>
+          <div>${musicianTags}</div>
+        </div>` : '<div style="font-family:var(--font-mono);font-size:.65rem;color:var(--muted)">Aucun musicien assigné</div>'}
+      </div>
+      ${adminBtns}
+    </div>`;
+}
+
+/* ════════════════════════════════════
+   MODAL ÉVÉNEMENT
+════════════════════════════════════ */
+function openEventModal(ev = null) {
+  editingEventId = ev ? ev.id : null;
+  tempMusicians  = ev ? (ev.musicians || []).map(m => ({...m})) : [];
+
+  document.getElementById('evModalTitle').textContent = ev ? 'MODIFIER L\'ÉVÉNEMENT' : 'NOUVEL ÉVÉNEMENT';
+  document.getElementById('evNom').value         = ev ? ev.nom          : '';
+  document.getElementById('evType').value        = ev ? ev.type         : 'concert';
+  document.getElementById('evDate').value        = ev ? ev.date         : new Date().toISOString().split('T')[0];
+  document.getElementById('evLieu').value        = ev ? ev.lieu         : '';
+  document.getElementById('evDescription').value = ev ? ev.description  : '';
+  document.getElementById('evImagePath').value   = ev ? ev.image_path   : '';
+  document.getElementById('imgPreview').style.display = 'none';
+  document.getElementById('imgUploadText').textContent = ev && ev.image_path
+    ? '✔ Image actuelle — cliquez pour en choisir une autre'
+    : 'Cliquez pour choisir une image (jpg, png…)';
+  if (ev && ev.image_path) {
+    document.getElementById('imgPreview').src = ev.image_path;
+    document.getElementById('imgPreview').style.display = 'block';
+  }
+
+  renderMusicianList();
+  document.getElementById('btnSaveEvent').disabled = false;
+  document.getElementById('eventOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('evNom').focus(), 80);
+}
+
+function openEditModal(id) {
+  const ev = allEvents.find(e => e.id === id);
+  if (ev) openEventModal(ev);
+}
+
+function closeEventModal() {
+  document.getElementById('eventOverlay').classList.remove('open');
+  document.getElementById('evImage').value = '';
+  editingEventId = null;
+  tempMusicians  = [];
+}
+
+/* ════════════════════════════════════
+   IMAGE
+════════════════════════════════════ */
+function triggerImagePick() {
+  document.getElementById('evImage').click();
+}
+
+function previewImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('imgPreview');
+    img.src = e.target.result;
+    img.style.display = 'block';
+    document.getElementById('imgUploadText').textContent = '✔ ' + file.name;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function uploadImageIfNeeded() {
+  const fileInput = document.getElementById('evImage');
+  if (!fileInput.files[0]) return document.getElementById('evImagePath').value;
+  return await dbUploadImage(fileInput.files[0]);
+}
+
+/* ════════════════════════════════════
+   MUSICIENS
+════════════════════════════════════ */
+function addMusician() {
+  const nomEl  = document.getElementById('muNom');
+  const instEl = document.getElementById('muInst');
+  const nom    = nomEl.value.trim();
+  if (!nom) {
+    nomEl.style.borderColor = 'var(--red)';
+    setTimeout(() => nomEl.style.borderColor = '', 1500);
+    return;
+  }
+  tempMusicians.push({ id: Date.now(), nom, instrument: instEl.value.trim() });
+  nomEl.value  = ''; instEl.value = '';
+  nomEl.focus();
+  renderMusicianList();
+}
+
+function removeMusician(id) {
+  tempMusicians = tempMusicians.filter(m => m.id !== id);
+  renderMusicianList();
+}
+
+function renderMusicianList() {
+  const list = document.getElementById('musicianList');
+  if (!tempMusicians.length) {
+    list.innerHTML = '<div class="musician-empty">Aucun musicien — ajoutez les noms ci-dessus</div>';
+    return;
+  }
+  list.innerHTML = tempMusicians.map(m => `
+    <div class="musician-item">
+      <div class="musician-item-left">
+        <span class="musician-item-name">👤 ${escHtml(m.nom)}</span>
+        ${m.instrument ? `<span class="musician-item-inst">· ${escHtml(m.instrument)}</span>` : ''}
+      </div>
+      <button class="btn-musician-del" onclick="removeMusician(${m.id})" title="Retirer">✕</button>
+    </div>`).join('');
+}
+
+/* ════════════════════════════════════
+   SAUVEGARDER ÉVÉNEMENT
+════════════════════════════════════ */
+async function saveEvent() {
+  const nom  = document.getElementById('evNom').value.trim();
+  const date = document.getElementById('evDate').value;
+  const nomEl = document.getElementById('evNom');
+
+  if (!nom)  { nomEl.style.borderColor = 'var(--red)'; setTimeout(()=>nomEl.style.borderColor='',1500); showToast('⚠ Entrez le nom de l\'événement'); return; }
+  if (!date) { showToast('⚠ Sélectionnez une date'); return; }
+
+  const btn = document.getElementById('btnSaveEvent');
+  btn.disabled = true;
+  btn.textContent = 'Enregistrement…';
+
+  try {
+    const image_path = await uploadImageIfNeeded();
+
+    const payload = {
+      nom,
+      type:        document.getElementById('evType').value,
+      date,
+      lieu:        document.getElementById('evLieu').value.trim(),
+      description: document.getElementById('evDescription').value.trim(),
+      image_path,
+      musicians:   tempMusicians.map(m => ({ nom: m.nom, instrument: m.instrument })),
+    };
+
+    if (editingEventId) {
+      await apiCall('edit_event', { id: editingEventId, ...payload });
+      showToast('✔ Événement mis à jour');
+    } else {
+      const res = await apiCall('save_event', payload);
+      showToast(`✔ Événement créé — entrée financière #${res.finance_id} générée automatiquement`);
+    }
+
+    closeEventModal();
+    await loadEvents();
+  } catch(e) {
+    showToast('⚠ ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Enregistrer l\'événement';
+  }
+}
+
+/* ════════════════════════════════════
+   SUPPRIMER ÉVÉNEMENT
+════════════════════════════════════ */
+function requestDeleteEvent(id, nom) {
+  if (!isAdmin) { openPinModal(); return; }
+  pendingDelete = id;
+  if (confirm(`Supprimer l'événement "${nom}" ?\n\nLes entrées financières liées seront conservées.`)) {
+    deleteEvent(id);
+  }
+  pendingDelete = null;
+}
+
+async function deleteEvent(id) {
+  try {
+    await apiCall('delete_event', { id });
+    allEvents = allEvents.filter(e => e.id !== id);
+    renderEvents();
+    showToast('🗑 Événement supprimé');
+  } catch(e) {
+    showToast('⚠ ' + e.message);
+  }
+}
+
+/* ════════════════════════════════════
+   MODAL PIN
+════════════════════════════════════ */
+function openPinModal() {
+  document.getElementById('pinError').textContent    = '';
+  document.getElementById('pinAttempts').textContent = '';
+  document.getElementById('pinField').value          = '';
+  document.getElementById('pinOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('pinField').focus(), 80);
+}
+function closePinModal() {
+  document.getElementById('pinOverlay').classList.remove('open');
+  document.getElementById('pinField').value = '';
+}
+function pinPress(d) {
+  const el = document.getElementById('pinField');
+  if (el.value.length >= 12) return;
+  el.value += d;
+  document.getElementById('pinError').textContent = '';
+}
+function onPinKey(e) {
+  if (e.key === 'Enter')  { e.preventDefault(); pinSubmit(); }
+  if (e.key === 'Escape') { closePinModal(); }
+  if (e.key.length === 1 && !/\d/.test(e.key)) e.preventDefault();
+}
+function pinSubmit() {
+  const val = document.getElementById('pinField').value;
+  const now = Date.now();
+  if (lockedUntil > now) {
+    showPinErr('Bloqué — ' + Math.ceil((lockedUntil - now) / 1000) + 's');
+    document.getElementById('pinField').value = '';
+    return;
+  }
+  if (val === SECRET) {
+    tries = 0; localStorage.setItem('br_tries','0'); localStorage.removeItem('br_lock');
+    closePinModal(); activateSession();
+  } else {
+    tries++; localStorage.setItem('br_tries', tries);
+    document.getElementById('pinField').value = '';
+    if (tries >= MAX_TRIES) {
+      const until = Date.now() + 60000;
+      localStorage.setItem('br_lock', until); lockedUntil = until;
+      showPinErr('Trop de tentatives — bloqué 60s');
+    } else {
+      showPinErr('Code incorrect !');
+      document.getElementById('pinAttempts').textContent = 'Tentatives restantes : ' + (MAX_TRIES - tries);
+    }
+  }
+}
+function showPinErr(msg) {
+  const el = document.getElementById('pinError');
+  el.textContent = ''; requestAnimationFrame(() => { el.textContent = msg; });
+}
+
+/* ════════════════════════════════════
+   SESSION
+════════════════════════════════════ */
+function activateSession() {
+  isAdmin = true;
+  document.getElementById('modeBadge').textContent = '✏️ Admin';
+  document.getElementById('modeBadge').className   = 'mode-badge edit';
+  document.getElementById('sessionBar').classList.add('visible');
+  document.getElementById('lockCta').classList.remove('visible');
+  document.getElementById('btnNewEvent').style.display = '';
+  renderEvents();
+}
+function closeSession() {
+  isAdmin = false;
+  document.getElementById('modeBadge').textContent = '👁 Consultation';
+  document.getElementById('modeBadge').className   = 'mode-badge view';
+  document.getElementById('sessionBar').classList.remove('visible');
+  document.getElementById('lockCta').classList.add('visible');
+  document.getElementById('btnNewEvent').style.display = 'none';
+  renderEvents();
+}
+
+/* ════════════════════════════════════
+   INIT
+════════════════════════════════════ */
+document.getElementById('dateDisplay').textContent =
+  new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+document.getElementById('lockCta').classList.add('visible');
+applyTheme();
+loadEvents();
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeEventModal();
+    closePinModal();
+  }
+});
+</script>
+</body>
+</html>
