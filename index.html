@@ -809,12 +809,12 @@ tr.total-row .lbl {
   <div class="header-right">
     <div class="header-date" id="dateDisplay"></div>
     <button class="btn-theme" id="themeToggle" onclick="toggleTheme()" title="Mode jour / nuit">🌙</button>
-    <div class="mode-badge view" id="modeBadge">👁 Consultation</div>
+    <div class="mode-badge view" id="modeBadge" onclick="if(!isAdmin)openPinModal('unlock')" style="cursor:pointer" title="Cliquer pour déverrouiller">👁 Consultation</div>
   </div>
 </header>
 
 <!-- ══ BARRE BASE DE DONNÉES ══ -->
-<div class="db-bar" id="dbBar">
+<div class="db-bar" id="dbBar" style="display:none">
   <div class="db-status-wrap">
     <div class="db-dot"></div>
     <div class="db-status-text" id="dbStatusText">Initialisation…</div>
@@ -829,10 +829,7 @@ tr.total-row .lbl {
   <div class="info-bar-text">✔ &nbsp;Mode administrateur actif — ajout, modification et suppression autorisés</div>
   <button class="btn-session-end" onclick="closeSession()">🔒 Terminer la session</button>
 </div>
-<div class="info-bar lock" id="lockCta">
-  <div class="info-bar-text">🔒 <strong>Mode consultation</strong> — Entrez le code pour modifier les données.</div>
-  <button class="btn-unlock" onclick="openPinModal('unlock')">🗝 Déverrouiller</button>
-</div>
+<div class="info-bar lock" id="lockCta" style="display:none!important"></div>
 
 <!-- ══ STATS ══ -->
 <div class="stats-grid">
@@ -1115,6 +1112,7 @@ document.getElementById('cDate').value = today;
 document.getElementById('dDate').value = today;
 document.getElementById('lockCta').classList.add('visible');
 applyTheme();
+render();
 initDB();
 
 /* ════════════════════════════════════
@@ -1393,8 +1391,12 @@ async function doAdd(type) {
   } catch(e) { showToast('⚠ '+e.message); }
 }
 function requestDelete(type, id) {
-  if (!isAdmin) { openPinModal('del',type,'del',id); return; }
-  doDelete(type,id);
+  if (!isAdmin) return;
+  const arr   = type==='cred' ? credEntries : debEntries;
+  const entry = arr.find(e=>e.id===id);
+  const nom   = entry ? `"${entry.desc}"` : 'cette opération';
+  if (!confirm(`Supprimer ${nom} ?\nCette action est irréversible.`)) return;
+  doDelete(type, id);
 }
 async function doDelete(type, id) {
   try {
@@ -1438,7 +1440,7 @@ function renderTable(tbodyId, entries, type, amtClass, total) {
     const isExpanded=expandedRows.has(e.id);
     const delBtn=isAdmin
       ?`<button class="btn-del unlocked" onclick="requestDelete('${type}',${e.id})" title="Supprimer">✕</button>`
-      :`<button class="btn-del locked-del" onclick="requestDelete('${type}',${e.id})" title="Code requis">🔒</button>`;
+      :``;
     const badge=hasDetails?`<span class="has-details-badge">${e.details.length} détail${e.details.length>1?'s':''}</span>`:'';
     const expandBtn=hasDetails
       ?`<button class="btn-expand ${isExpanded?'expanded':''}" onclick="toggleExpand(${e.id})" title="${isExpanded?'Masquer':'Détails'}">${isExpanded?'▼':'▶'}</button>`:'';

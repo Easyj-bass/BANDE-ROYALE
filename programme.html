@@ -364,12 +364,12 @@ input:focus, select:focus, textarea:focus { border-color:var(--gold-dim); box-sh
   <div class="header-right">
     <div class="header-date" id="dateDisplay"></div>
     <button class="btn-theme" id="themeToggle" onclick="toggleTheme()" title="Mode jour/nuit">🌙</button>
-    <div class="mode-badge view" id="modeBadge">👁 Consultation</div>
+    <div class="mode-badge view" id="modeBadge" onclick="if(!isAdmin)openPinModal()" style="cursor:pointer" title="Cliquer pour déverrouiller">👁 Consultation</div>
   </div>
 </header>
 
 <!-- ══ BARRE DB ══ -->
-<div class="db-bar" id="dbBar">
+<div class="db-bar" id="dbBar" style="display:none">
   <div class="db-status-wrap">
     <div class="db-dot"></div>
     <div class="db-status-text" id="dbStatusText">Connexion à la base de données…</div>
@@ -384,10 +384,7 @@ input:focus, select:focus, textarea:focus { border-color:var(--gold-dim); box-sh
   <div class="info-bar-text">✔ &nbsp;Mode administrateur — ajout, modification et suppression autorisés</div>
   <button class="btn-session-end" onclick="closeSession()">🔒 Terminer la session</button>
 </div>
-<div class="info-bar lock" id="lockCta">
-  <div class="info-bar-text">🔒 <strong>Mode consultation</strong> — Entrez le code administrateur pour modifier les événements.</div>
-  <button class="btn-unlock" onclick="openPinModal()">🗝 Déverrouiller</button>
-</div>
+<div class="info-bar lock" id="lockCta" style="display:none!important"></div>
 
 <!-- ══ SECTION ÉVÉNEMENTS ══ -->
 <div class="events-section">
@@ -879,12 +876,9 @@ async function saveEvent() {
    SUPPRIMER ÉVÉNEMENT
 ════════════════════════════════════ */
 function requestDeleteEvent(id, nom) {
-  if (!isAdmin) { openPinModal(); return; }
-  pendingDelete = id;
-  if (confirm(`Supprimer l'événement "${nom}" ?\n\nLes entrées financières liées seront conservées.`)) {
-    deleteEvent(id);
-  }
-  pendingDelete = null;
+  if (!isAdmin) return;
+  if (!confirm(`Supprimer l'événement "${nom}" ?\n\nLes entrées financières liées seront conservées.`)) return;
+  deleteEvent(id);
 }
 
 async function deleteEvent(id) {
