@@ -1287,7 +1287,7 @@ function addDetailLine() {
   const nom=nomEl.value.trim(), montant=parseFloat(montantEl.value), motif=motifEl.value.trim()||'—';
   let ok=true;
   if (!nom)                      { nomEl.style.borderColor='var(--red)';     setTimeout(()=>nomEl.style.borderColor='',1500);     ok=false; }
-  if (isNaN(montant)||montant<=0){ montantEl.style.borderColor='var(--red)'; setTimeout(()=>montantEl.style.borderColor='',1500); ok=false; }
+  if (isNaN(montant)||montant<0){ montantEl.style.borderColor='var(--red)'; setTimeout(()=>montantEl.style.borderColor='',1500); ok=false; }
   if (!ok) return;
   tempDetails.push({id:Date.now(), nom, montant, motif});
   clearDetailForm(); nomEl.focus(); renderDetailLines();
@@ -1380,7 +1380,7 @@ async function doAdd(type) {
   const desc=descEl.value.trim(), date=dateEl.value, amt=parseFloat(amtEl.value);
   let ok=true;
   if (!desc)             { descEl.style.borderColor='var(--red)'; setTimeout(()=>descEl.style.borderColor='',1500); ok=false; }
-  if (isNaN(amt)||amt<=0){ amtEl.style.borderColor='var(--red)';  setTimeout(()=>amtEl.style.borderColor='',1500);  ok=false; }
+  if (isNaN(amt)||amt<0){ amtEl.style.borderColor='var(--red)';  setTimeout(()=>amtEl.style.borderColor='',1500);  ok=false; }
   if (!ok) return;
   try {
     const result=await apiCall('add_transaction',{type, desc, date, amt, details:[]});
