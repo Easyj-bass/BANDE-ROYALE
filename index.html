@@ -881,7 +881,7 @@ tr.total-row .lbl {
           <th>Événement</th>
           <th style="width:106px">Date</th>
           <th style="text-align:right;width:130px">Montant (FCFA)</th>
-          <th style="width:36px"></th>
+          <th style="width:94px"></th>
         </tr></thead>
         <tbody id="credTable"></tbody>
       </table>
@@ -913,7 +913,7 @@ tr.total-row .lbl {
           <th>Événement</th>
           <th style="width:106px">Date</th>
           <th style="text-align:right;width:130px">Montant (FCFA)</th>
-          <th style="width:36px"></th>
+          <th style="width:94px"></th>
         </tr></thead>
         <tbody id="debTable"></tbody>
       </table>
@@ -1443,16 +1443,16 @@ function renderTable(tbodyId, entries, type, amtClass, total) {
       :``;
     const badge=hasDetails?`<span class="has-details-badge">${e.details.length} détail${e.details.length>1?'s':''}</span>`:'';
     const expandBtn=hasDetails
-      ?`<button class="btn-expand ${isExpanded?'expanded':''}" onclick="toggleExpand(${e.id})" title="${isExpanded?'Masquer':'Détails'}">${isExpanded?'▼':'▶'}</button>`:'';
+      ?`<button class="btn-expand ${isExpanded?'expanded':''}" onclick="toggleExpand(${e.id})" title="${isExpanded?'Masquer':'Afficher les détails'}">${isExpanded?'▼':'▶'}</button>`:'';
     const editBtn=isAdmin
       ?`<button class="btn-edit-ev" onclick="editEventDetails('${type}',${e.id},event)" title="${hasDetails?'Modifier les détails':'Établir les détails'}">✏</button>`:'';
     const tr=document.createElement('tr');
     tr.innerHTML=`
       <td class="num-c">${sorted.length-i}</td>
-      <td class="desc-c" title="${escHtml(e.desc)}">${escHtml(e.desc)}${badge}${expandBtn}${editBtn}</td>
+      <td class="desc-c" title="${escHtml(e.desc)}">${escHtml(e.desc)}${badge}</td>
       <td class="date-c">${fmtDate(e.date)}</td>
       <td class="${amtClass}">${fmt(e.amt)}</td>
-      <td>${delBtn}</td>`;
+      <td><div style="display:flex;gap:2px;justify-content:flex-end;align-items:center">${expandBtn}${editBtn}${delBtn}</div></td>`;
     tbody.appendChild(tr);
     if (hasDetails&&isExpanded) {
       e.details.forEach(d => {
