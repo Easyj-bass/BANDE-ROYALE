@@ -789,6 +789,57 @@ tr.total-row .lbl {
   .modal-details { padding: 22px 18px; }
   .logo-text { font-size: 1rem; }
 }
+@media (max-width: 599px) {
+  /* ── Header : nav passe en 2e ligne ── */
+  header {
+    height: auto;
+    min-height: 52px;
+    padding: 8px 12px;
+    flex-wrap: wrap;
+    gap: 4px 0;
+  }
+  .logo-sub { display: none; }
+  .main-nav {
+    width: 100%;
+    justify-content: center;
+    padding: 6px 0 2px;
+    border-top: 1px solid var(--border2);
+  }
+  .nav-link { padding: 6px 12px; font-size: .65rem; }
+  .header-right { gap: 6px; }
+  .mode-badge { font-size: .52rem; padding: 4px 7px; }
+  .btn-theme { width: 28px; height: 28px; font-size: .78rem; }
+
+  /* ── Marges générales ── */
+  .stats-grid, .panels-grid, .bottom-bar,
+  .info-bar, .db-bar { margin-left: 10px; margin-right: 10px; }
+
+  /* ── Stats ── */
+  .stat-card  { padding: 14px 16px; }
+  .stat-value { font-size: 1.25rem; }
+
+  /* ── Formulaire : une colonne ── */
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid > * { grid-column: 1 !important; }
+
+  /* ── Tableaux : scroll horizontal ── */
+  .table-wrap { overflow-x: auto; }
+  table { min-width: 340px; }
+
+  /* ── Barre export : boutons pleine largeur ── */
+  .bottom-bar { flex-direction: column; align-items: stretch; }
+  .btn-export, .btn-save { width: 100%; justify-content: center; }
+
+  /* ── Ligne détail dans la modal ── */
+  .detail-line { grid-template-columns: 1fr 88px 36px; gap: 6px; }
+  .dl-motif { display: none; }
+
+  /* ── Modals ── */
+  .modal        { padding: 22px 14px; }
+  .modal-details,
+  .modal-fb     { padding: 18px 14px; }
+  .np-btn       { padding: 14px 0; font-size: 1rem; }
+}
 </style>
 </head>
 <body>
